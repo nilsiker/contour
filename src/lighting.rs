@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
-use crate::player::{Lantern, LightDirection, PlayerPosition};
+use crate::character::player::{Lantern, LightDirection, PlayerPosition};
 
 #[derive(Inspectable)]
 pub enum LightingMode {
@@ -15,7 +15,7 @@ pub struct Follow;
 #[derive(Component, Inspectable)]
 pub struct Lighting(pub LightingMode);
 #[derive(Component, Inspectable)]
-pub struct GlobalLight(bool);
+pub struct GlobalLight(pub bool);
 
 pub fn setup(
     mut commands: Commands,

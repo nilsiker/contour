@@ -1,8 +1,8 @@
 pub mod follow_camera {
     use bevy::{prelude::*, render::camera::ScalingMode};
-
-    use crate::player::PlayerPosition;
-
+    
+    use crate::character::player::PlayerPosition;
+    
     fn follow_camera_system(
         player: Query<&PlayerPosition>,
         mut camera: Query<&mut Transform, With<Camera2d>>,
@@ -29,6 +29,7 @@ pub mod follow_camera {
             let mut camera = Camera2dBundle::default();
             camera.projection.scaling_mode = ScalingMode::WindowSize;
             camera.projection.scale = 0.1;
+            camera.projection.far = f32::MAX;
             camera
         });
     }
