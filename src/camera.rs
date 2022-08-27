@@ -20,7 +20,7 @@ pub mod follow_camera {
     impl Plugin for FollowCameraPlugin {
         fn build(&self, app: &mut App) {
             app.add_startup_system(setup)
-                .add_system_to_stage(CoreStage::PostUpdate, follow_camera_system);
+                .add_system_to_stage(CoreStage::Last, follow_camera_system);
         }
     }
 
@@ -28,7 +28,7 @@ pub mod follow_camera {
         commands.spawn_bundle({
             let mut camera = Camera2dBundle::default();
             camera.projection.scaling_mode = ScalingMode::WindowSize;
-            camera.projection.scale = 0.1;
+            camera.projection.scale = 0.25;
             camera.projection.far = f32::MAX;
             camera
         });

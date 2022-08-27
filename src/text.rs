@@ -1,16 +1,76 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable, egui::Vec2};
+use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
-use crate::{character::GameOver, player::PlayerThoughtTimer};
+use crate::{
+    character::{player::ScreenTextTimer, GameOver},
+    game::GameState,
+};
 
 #[derive(Component, Inspectable)]
-struct Score(f32);
+pub struct Score(pub f32);
 
 #[derive(Component, Inspectable)]
-pub struct MainText(pub &'static str);
+pub struct MainText(pub String);
+#[derive(Component, Inspectable)]
+pub struct SubText(pub String);
+
+pub struct ExpositionText {
+    pub shown: bool,
+    pub main: &'static str,
+    pub sub: &'static str,
+}
+pub struct ExpositionTexts {
+    pub inner: [ExpositionText; 4],
+}
+
+const EXPOSITION_TEXTS: [ExpositionText; 4] = [
+    ExpositionText {
+        shown: false,
+        main: "CONTOUR",
+        sub: "<space>",
+    },
+    ExpositionText {
+        shown: false,
+        main: "They are stronger together, and that is meant literally.",
+        sub: "<g>",
+    },
+    ExpositionText {
+        shown: false,
+        main: "Your light will slow them down.",
+        sub: "<f>",
+    },
+    ExpositionText {
+        shown: false,
+        main: "But in time, they will consume you.",
+        sub: "<wasd>",
+    },
+];
 
 pub struct TextPlugin;
+
+impl Plugin for TextPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(ExpositionTexts {
+            inner: EXPOSITION_TEXTS,
+        })
+        .add_startup_system(setup)
+        .add_system_set(
+            SystemSet::on_update(GameState::Prelude)
+                .with_system(show_exposition_texts)
+                .with_system(step_through_prelude),
+        )
+        .add_system_set(
+            SystemSet::on_update(GameState::InGame)
+                .with_system(start_screen_text_timer)
+                .with_system(clear_screen_text)
+                .with_system(update_score_by_time)
+                .with_system(update_score_text),
+        )
+        .add_system(show_center_text)
+        .register_inspectable::<Score>();
+    }
+}
 
 fn setup(
     mut commands: Commands,
@@ -54,13 +114,57 @@ fn setup(
     egui_context.ctx_mut().set_fonts(fonts);
 }
 
-fn ui_example(mut egui_context: ResMut<EguiContext>, query: Query<&MainText>) {
-    for thought in &query {
+fn show_center_text(
+    state: Res<State<GameState>>,
+    mut egui_context: ResMut<EguiContext>,
+    query: Query<(&MainText, &SubText)>,
+) {
+    for (line1, line2) in &query {
         egui::Area::new("")
             .anchor(egui::Align2::CENTER_CENTER, (0., -100.))
             .show(egui_context.ctx_mut(), |ui| {
-                ui.colored_label(egui::Color32::WHITE, thought.0);
+                ui.colored_label(egui::Color32::WHITE, line1.0.to_owned());
             });
+
+        egui::Area::new("score")
+            .anchor(egui::Align2::CENTER_CENTER, (0., -50.))
+            .show(egui_context.ctx_mut(), |ui| match state.current() {
+                GameState::GameOver => {
+                    ui.colored_label(egui::Color32::WHITE, line2.0.to_owned());
+                }
+                _ => (),
+            });
+
+        egui::Area::new("input")
+            .anchor(egui::Align2::CENTER_CENTER, (0., 50.))
+            .show(egui_context.ctx_mut(), |ui| match state.current() {
+                GameState::GameOver => {
+                    ui.colored_label(egui::Color32::WHITE, "<refresh page to restart>".to_owned())
+                }
+                _ => ui.colored_label(egui::Color32::WHITE, line2.0.to_owned()),
+            });
+    }
+}
+
+fn start_screen_text_timer(mut query: Query<&mut ScreenTextTimer, Changed<MainText>>) {
+    for mut timer in &mut query {
+        timer.0.unpause();
+        timer.0.reset();
+    }
+}
+
+fn clear_screen_text(
+    time: Res<Time>,
+    mut query: Query<(&mut MainText, &mut SubText, &mut ScreenTextTimer)>,
+) {
+    for (mut main, mut sub, mut timer) in &mut query {
+        if timer.0.just_finished() {
+            main.0 = "".to_owned();
+            sub.0 = "".to_owned();
+            timer.0.reset();
+        } else {
+            timer.0.tick(time.delta());
+        }
     }
 }
 
@@ -84,42 +188,54 @@ fn update_score_text(mut query: Query<(&mut Text, &Score)>) {
     }
 }
 
-fn start_player_thought_timer(mut query: Query<&mut PlayerThoughtTimer, Changed<MainText>>) {
-    for mut timer in &mut query {
-        timer.0.unpause();
-        timer.0.reset();
-    }
-}
-
-fn clear_player_thought(
-    time: Res<Time>,
-    mut query: Query<(&mut MainText, &mut PlayerThoughtTimer)>,
+fn show_exposition_texts(
+    texts: ResMut<ExpositionTexts>,
+    mut query: Query<(&mut MainText, &mut SubText)>,
 ) {
-    for (mut thought, mut timer) in &mut query {
-        if timer.0.just_finished() {
-            thought.0 = "";
-            timer.0.reset();
-        } else {
-            timer.0.tick(time.delta());
+    for (mut main, mut sub) in &mut query {
+        let next_unshown_text = texts.inner.iter().find(|text| !text.shown);
+        match next_unshown_text {
+            Some(text) => {
+                main.0 = text.main.to_owned();
+                sub.0 = text.sub.to_owned();
+            }
+            None => (),
         }
     }
 }
 
-fn debug_input_player_thoughts(input: Res<Input<KeyCode>>, mut query: Query<&mut MainText>) {
-    if input.just_pressed(KeyCode::T) {
-        query.single_mut().0 = "This is a test thought, hmmm....";
-    }
-}
-
-impl Plugin for TextPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(start_player_thought_timer)
-            .add_system(clear_player_thought)
-            .add_system(debug_input_player_thoughts)
-            .add_system(ui_example)
-            .add_system(update_score_by_time)
-            .add_system(update_score_text)
-            .register_inspectable::<Score>();
+fn step_through_prelude(
+    mut state: ResMut<State<GameState>>,
+    mut local: Local<usize>,
+    input: Res<Input<KeyCode>>,
+    mut texts: ResMut<ExpositionTexts>,
+) {
+    match *local {
+        0 => {
+            if input.just_pressed(KeyCode::Space) {
+                *local = 1;
+                texts.inner[0].shown = true;
+            }
+        }
+        1 => {
+            if input.just_pressed(KeyCode::G) {
+                *local = 2;
+                texts.inner[1].shown = true;
+            }
+        }
+        2 => {
+            if input.just_pressed(KeyCode::F) {
+                *local = 3;
+                texts.inner[2].shown = true;
+            }
+        }
+        _ => {
+            if input.any_pressed([KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D]) {
+                state
+                    .set(GameState::InGame)
+                    .expect("State must be added to the game at this point.");
+                texts.inner[3].shown = true;
+            }
+        }
     }
 }

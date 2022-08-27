@@ -7,14 +7,18 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "^0.8.0" }
-bevy_egui = "^0.15.1"
+bevy_egui = "^0.16.0"
 bevy-inspector-egui = "^0.12.1"
 bevy_rapier2d = { version = "^0.16.0", features = [
     "simd-stable",
     "debug-render",
 ] }
 bevy_ecs_tilemap = "0.7.0"
+bevy_kira_audio = { version = "*", features = ["wav"] }
 rand = "^0.8.5"
+
+[patch.crates-io]
+wgpu = { git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround" }
 
 [profile.dev.package."*"]
 opt-level = 3

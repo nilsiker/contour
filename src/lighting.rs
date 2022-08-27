@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
-use crate::character::player::{Lantern, LightDirection, PlayerPosition};
+use crate::character::{
+    player::{Lantern, PlayerPosition},
+    MoveDirection,
+};
 
 #[derive(Inspectable)]
 pub enum LightingMode {
@@ -17,12 +20,27 @@ pub struct Lighting(pub LightingMode);
 #[derive(Component, Inspectable)]
 pub struct GlobalLight(pub bool);
 
+pub struct LightingPlugin;
+
+impl Plugin for LightingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup)
+            .add_system(follow_player)
+            .add_system(kill_global_light)
+            .add_system(global_light_trigger)
+            .add_system(lantern_light_trigger)
+            .add_system(update_lighting_sprite)
+            .register_inspectable::<Lighting>();
+    }
+}
+
 pub fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let transform = Transform::from_xyz(0., 0., 998.);
+    let mut transform = Transform::from_xyz(0., 0., 998.);
+    transform.scale = Vec3::new(2., 2., 2.);
     let texture_handle = asset_server.load("darkness.png");
 
     let texture_atlas_handle = texture_atlases.add(TextureAtlas::from_grid(
@@ -44,13 +62,13 @@ pub fn setup(
 }
 
 fn follow_player(
-    players: Query<(&PlayerPosition, &LightDirection)>,
+    players: Query<(&PlayerPosition, &MoveDirection)>,
     mut follows: Query<&mut Transform, With<Follow>>,
 ) {
     for (player_position, light_direction) in &players {
         for mut follow_transform in &mut follows {
             follow_transform.translation.x = player_position.x + light_direction.0.x * 10.;
-            follow_transform.translation.y = player_position.y + light_direction.0.y * 10.;
+            follow_transform.translation.y = player_position.y + 8.0 + light_direction.0.y * 10.;
         }
     }
 }
@@ -76,7 +94,10 @@ fn global_light_trigger(
     }
 }
 
-fn lantern_light_trigger(mut query: Query<&mut Lighting>, lantern_query: Query<&Lantern, Changed<Lantern>>) {
+fn lantern_light_trigger(
+    mut query: Query<&mut Lighting>,
+    lantern_query: Query<&Lantern, Changed<Lantern>>,
+) {
     for mut lighting in &mut query {
         for _ in &lantern_query {
             match lighting.0 {
@@ -108,24 +129,10 @@ fn update_lighting_sprite(
     }
 }
 
-fn debug_global(input: Res<Input<KeyCode>>, mut query: Query<&mut GlobalLight>) {
+fn kill_global_light(input: Res<Input<KeyCode>>, mut query: Query<&mut GlobalLight>) {
     if input.just_pressed(KeyCode::G) {
         for mut global_light in &mut query {
-            global_light.0 = !global_light.0;
+            global_light.0 = false;
         }
-    }
-}
-
-pub struct LightingPlugin;
-
-impl Plugin for LightingPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(follow_player)
-            .add_system(debug_global)
-            .add_system(global_light_trigger)
-            .add_system(lantern_light_trigger)
-            .add_system(update_lighting_sprite)
-            .register_inspectable::<Lighting>();
     }
 }

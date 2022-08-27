@@ -1,6 +1,13 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
+use crate::game::GameState;
+
+use self::{
+    enemy::{Enemy, EnemyPlugin},
+    player::PlayerPlugin,
+};
+
 pub mod enemy;
 pub mod player;
 
@@ -16,14 +23,34 @@ struct AnimationTimer(Timer);
 #[derive(Component)]
 struct Speed(f32);
 
+pub struct CharacterPlugin;
+impl Plugin for CharacterPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(sprite_movement).add_system(sprite_flipping);
+    }
+}
+
 fn sprite_movement(
+    state: Res<State<GameState>>,
     time: Res<Time>,
-    mut sprite_position: Query<(&MoveDirection, &mut Transform, &Speed)>,
+    mut player: Query<(&MoveDirection, &mut Transform, &Speed), Without<Enemy>>,
+    mut enemies: Query<(&MoveDirection, &mut Transform, &Speed), With<Enemy>>,
 ) {
-    for (movement, mut transform, speed) in &mut sprite_position {
+    for (movement, mut transform, speed) in &mut enemies {
         let move_vector =
             Vec3::new(movement.0.x, movement.0.y, 0.) * time.delta_seconds() * speed.0;
         transform.translation += move_vector;
+    }
+
+    match state.current() {
+        GameState::InGame => {
+            for (movement, mut transform, speed) in &mut player {
+                let move_vector =
+                    Vec3::new(movement.0.x, movement.0.y, 0.) * time.delta_seconds() * speed.0;
+                transform.translation += move_vector;
+            }
+        }
+        _ => (),
     }
 }
 

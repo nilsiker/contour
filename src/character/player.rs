@@ -2,11 +2,18 @@ use bevy::{prelude::*, sprite::Anchor};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 
-use crate::{animation::Anim, rendering, text::MainText};
+use crate::{
+    animation::Anim,
+    game::GameState,
+    rendering,
+    text::{MainText, SubText},
+};
 
-use super::{sprite_flipping, sprite_movement, AnimationTimer, GameOver, MoveDirection, Speed, enemy::Enemy};
+use super::{
+    enemy::Enemy, sprite_flipping, sprite_movement, AnimationTimer, GameOver, MoveDirection, Speed,
+};
 
-pub struct PlayerCharacterPlugin;
+pub struct PlayerPlugin;
 
 #[derive(Component, Inspectable)]
 enum Locomotion {
@@ -29,13 +36,30 @@ pub struct PlayerAnimations {
 }
 
 #[derive(Component, Reflect)]
-pub struct PlayerThoughtTimer(pub Timer);
+pub struct ScreenTextTimer(pub Timer);
 
 #[derive(Component, Inspectable)]
 pub struct LightDirection(pub Vec2);
 
 #[derive(Component, Inspectable)]
 pub struct Lantern(pub bool);
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup)
+            .add_system_set(
+                SystemSet::on_update(GameState::InGame)
+                    .with_system(movement_input)
+                    .with_system(lantern_direction)
+                    .with_system(update_player_position),
+            )
+            .add_system(sprite_animation)
+            .add_system(lantern_toggle)
+            .register_inspectable::<MoveDirection>()
+            .register_inspectable::<LightDirection>()
+            .register_inspectable::<Lantern>();
+    }
+}
 
 fn setup(
     mut commands: Commands,
@@ -75,14 +99,16 @@ fn setup(
             idle: Anim::new(17, 17),
         })
         .insert(Lantern(false))
-        .insert(MainText("In darkness you perish"))
-        .insert(PlayerThoughtTimer(Timer::from_seconds(5.0, false)))
+        .insert(MainText("In darkness you perish".to_owned()))
+        .insert(SubText("".to_owned()))
+        .insert(ScreenTextTimer(Timer::from_seconds(5.0, false)))
         .insert(GameOver(false))
         .insert(rendering::OrderedZ);
 }
 
 fn sprite_animation(
     time: Res<Time>,
+    state: Res<State<GameState>>,
     mut query: Query<(
         &mut PlayerAnimations,
         &mut AnimationTimer,
@@ -92,27 +118,32 @@ fn sprite_animation(
     )>,
 ) {
     for (mut anims, mut timer, mut sprite, direction, flashlight) in &mut query {
-        timer.tick(time.delta());
-        if direction.0.length_squared() > 0. {
-            if timer.just_finished() {
-                if flashlight.0 {
-                    sprite.index = anims.walk_light.step();
+        match state.current() {
+            GameState::GameOver => sprite.index = anims.idle.step(),
+            _ => {
+                timer.tick(time.delta());
+                if direction.0.length_squared() > 0. {
+                    if timer.just_finished() {
+                        if flashlight.0 {
+                            sprite.index = anims.walk_light.step();
+                        } else {
+                            sprite.index = anims.walk.step();
+                        }
+                    }
                 } else {
-                    sprite.index = anims.walk.step();
+                    if flashlight.0 {
+                        sprite.index = anims.idle_light.step();
+                    } else {
+                        sprite.index = anims.idle.step();
+                    }
                 }
-            }
-        } else {
-            if flashlight.0 {
-                sprite.index = anims.idle_light.step();
-            } else {
-                sprite.index = anims.idle.step();
             }
         }
     }
 }
 
-fn lantern_toggle(input: Res<Input<MouseButton>>, mut query: Query<&mut Lantern>) {
-    if input.just_pressed(MouseButton::Right) {
+fn lantern_toggle(input: Res<Input<KeyCode>>, mut query: Query<&mut Lantern>) {
+    if input.just_pressed(KeyCode::F) {
         for mut lantern in &mut query {
             lantern.0 = !lantern.0;
         }
@@ -173,8 +204,10 @@ fn movement_input(
                 }
                 temp
             };
+
             vector.0.x = x;
             vector.0.y = y;
+            vector.0 = vector.0.normalize_or_zero();
         }
     }
 }
@@ -183,20 +216,5 @@ fn update_player_position(mut query: Query<(&mut PlayerPosition, &Transform)>) {
     for (mut player_data, transform) in &mut query {
         player_data.x = transform.translation.x;
         player_data.y = transform.translation.y;
-    }
-}
-
-impl Plugin for PlayerCharacterPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(movement_input)
-            .add_system(sprite_movement)
-            .add_system(sprite_flipping)
-            .add_system(sprite_animation)
-            .add_system(lantern_toggle)
-            .add_system(lantern_direction)
-            .add_system(update_player_position)
-            .register_inspectable::<LightDirection>()
-            .register_inspectable::<Lantern>();
     }
 }
