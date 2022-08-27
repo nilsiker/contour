@@ -1,13 +1,12 @@
 pub mod follow_camera {
     use bevy::{prelude::*, render::camera::ScalingMode};
-    
+
     use crate::character::player::PlayerPosition;
-    
+
     fn follow_camera_system(
         player: Query<&PlayerPosition>,
         mut camera: Query<&mut Transform, With<Camera2d>>,
     ) {
-
         for player_position in &player {
             for mut transform in &mut camera {
                 transform.translation.x = player_position.x;

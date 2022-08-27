@@ -32,8 +32,8 @@ impl PluginGroup for ContourPlugins {
 }
 
 pub fn play_audio_system(asset_server: Res<AssetServer>, audio: Res<Audio>) {
-    audio.play(
-        asset_server.load("bgm.wav")
-    ).looped()
-    .with_volume(0.75);
+    audio
+        .play(asset_server.load("bgm.wav"))
+        .looped()
+        .with_volume(0.75);
 }
