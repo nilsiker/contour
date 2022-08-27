@@ -82,7 +82,7 @@ fn setup(
             TextBundle::from_sections([TextSection::from_style(TextStyle {
                 font: asset_server.load("PressStart2P.ttf"),
                 font_size: 40.0,
-                color: Color::GOLD
+                color: Color::GOLD,
             })])
             .with_style(Style {
                 position_type: PositionType::Absolute,
