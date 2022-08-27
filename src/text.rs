@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 
 use crate::{
-    character::{player::ScreenTextTimer, GameOver},
+    character::{
+        player::{Lantern, ScreenTextTimer},
+        GameOver,
+    },
     game::GameState,
 };
 
@@ -166,13 +169,16 @@ fn clear_screen_text(
 
 fn update_score_by_time(
     mut query: Query<&mut Score>,
-    game_over_query: Query<&GameOver>,
+    game_over_query: Query<(&Lantern, &GameOver)>,
     time: Res<Time>,
 ) {
     for mut score in &mut query {
-        if let Ok(game_over) = game_over_query.get_single() {
+        if let Ok((lantern, game_over)) = game_over_query.get_single() {
             if !game_over.0 {
-                score.0 += time.delta_seconds();
+                score.0 += match lantern.0 {
+                    true => time.delta_seconds(),
+                    false => time.delta_seconds() * 2.0,
+                }
             }
         }
     }
