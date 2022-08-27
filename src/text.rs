@@ -121,7 +121,7 @@ fn show_center_text(
 ) {
     for (line1, line2) in &query {
         egui::Area::new("")
-            .anchor(egui::Align2::CENTER_CENTER, (0., -100.))
+            .anchor(egui::Align2::CENTER_CENTER, (0., -140.))
             .show(egui_context.ctx_mut(), |ui| {
                 ui.colored_label(egui::Color32::WHITE, line1.0.to_owned());
             });

@@ -27,7 +27,7 @@ pub mod follow_camera {
         commands.spawn_bundle({
             let mut camera = Camera2dBundle::default();
             camera.projection.scaling_mode = ScalingMode::WindowSize;
-            camera.projection.scale = 0.25;
+            camera.projection.scale = 0.15;
             camera.projection.far = f32::MAX;
             camera
         });

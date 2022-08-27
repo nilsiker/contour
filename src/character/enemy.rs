@@ -254,7 +254,7 @@ fn enemy_intersecting_player(
             bevy::log::info!("{}", intersections.len());
             game_over.0 = true;
             for mut projection in &mut camera {
-                projection.scale = 0.15;
+                projection.scale = 0.08;
                 text.0 = "GAME OVER".to_owned();
                 sub.0 = format!("Score: {}", score.single().0.round().to_owned());
             }
