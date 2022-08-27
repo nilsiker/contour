@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 
 use crate::game::GameState;
 
@@ -8,10 +7,10 @@ use self::enemy::Enemy;
 pub mod enemy;
 pub mod player;
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct GameOver(pub bool);
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct MoveDirection(pub Vec2);
 
 #[derive(Component, Deref, DerefMut)]
