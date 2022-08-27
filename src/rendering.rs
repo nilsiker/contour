@@ -10,7 +10,7 @@ impl Plugin for RenderingPlugin {
                 transparent: true,
                 cursor_visible: false,
                 decorations: false,
-                width:  1280.0,
+                width: 1280.0,
                 height: 720.0,
                 ..default()
             })
