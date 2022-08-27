@@ -8,9 +8,10 @@ impl Plugin for RenderingPlugin {
                 title: "Contour".to_string(),
                 present_mode: PresentMode::AutoNoVsync,
                 transparent: true,
-                resizable: true,
                 cursor_visible: false,
-                fit_canvas_to_parent: true,
+                decorations: false,
+                width:  1280.0,
+                height: 720.0,
                 ..default()
             })
             .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
