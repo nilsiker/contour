@@ -1,12 +1,10 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::{prelude::*, Audio};
 
 use crate::{
     camera::follow_camera::FollowCameraPlugin,
     character::{enemy::EnemyPlugin, player::PlayerPlugin, CharacterPlugin},
     lighting::LightingPlugin,
-    rendering::RenderingPlugin,
     text::TextPlugin,
 };
 

@@ -52,7 +52,7 @@ pub fn setup(
     commands
         .spawn_bundle(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
-            transform: transform,
+            transform,
             ..default()
         })
         .insert(Name::new("Lighting"))

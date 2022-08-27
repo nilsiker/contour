@@ -3,10 +3,7 @@ use bevy_inspector_egui::Inspectable;
 
 use crate::game::GameState;
 
-use self::{
-    enemy::{Enemy, EnemyPlugin},
-    player::PlayerPlugin,
-};
+use self::enemy::Enemy;
 
 pub mod enemy;
 pub mod player;
@@ -42,15 +39,12 @@ fn sprite_movement(
         transform.translation += move_vector;
     }
 
-    match state.current() {
-        GameState::InGame => {
-            for (movement, mut transform, speed) in &mut player {
-                let move_vector =
-                    Vec3::new(movement.0.x, movement.0.y, 0.) * time.delta_seconds() * speed.0;
-                transform.translation += move_vector;
-            }
+    if let GameState::InGame = state.current() {
+        for (movement, mut transform, speed) in &mut player {
+            let move_vector =
+                Vec3::new(movement.0.x, movement.0.y, 0.) * time.delta_seconds() * speed.0;
+            transform.translation += move_vector;
         }
-        _ => (),
     }
 }
 

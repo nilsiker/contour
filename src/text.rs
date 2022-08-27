@@ -82,8 +82,7 @@ fn setup(
             TextBundle::from_sections([TextSection::from_style(TextStyle {
                 font: asset_server.load("PressStart2P.ttf"),
                 font_size: 40.0,
-                color: Color::GOLD,
-                ..default()
+                color: Color::GOLD
             })])
             .with_style(Style {
                 position_type: PositionType::Absolute,
@@ -128,11 +127,10 @@ fn show_center_text(
 
         egui::Area::new("score")
             .anchor(egui::Align2::CENTER_CENTER, (0., -50.))
-            .show(egui_context.ctx_mut(), |ui| match state.current() {
-                GameState::GameOver => {
+            .show(egui_context.ctx_mut(), |ui| {
+                if let GameState::GameOver = state.current() {
                     ui.colored_label(egui::Color32::WHITE, line2.0.to_owned());
                 }
-                _ => (),
             });
 
         egui::Area::new("input")

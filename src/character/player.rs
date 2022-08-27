@@ -9,9 +9,7 @@ use crate::{
     text::{MainText, SubText},
 };
 
-use super::{
-    enemy::Enemy, sprite_flipping, sprite_movement, AnimationTimer, GameOver, MoveDirection, Speed,
-};
+use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
 
 pub struct PlayerPlugin;
 
@@ -78,7 +76,7 @@ fn setup(
                 ..default()
             },
             texture_atlas: texture_atlas_handle,
-            transform: transform,
+            transform,
             ..default()
         })
         .insert(Name::new("Player"))
@@ -130,12 +128,10 @@ fn sprite_animation(
                             sprite.index = anims.walk.step();
                         }
                     }
+                } else if flashlight.0 {
+                    sprite.index = anims.idle_light.step();
                 } else {
-                    if flashlight.0 {
-                        sprite.index = anims.idle_light.step();
-                    } else {
-                        sprite.index = anims.idle.step();
-                    }
+                    sprite.index = anims.idle.step();
                 }
             }
         }

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter::Map, time::Duration};
+use std::time::Duration;
 
 use crate::{
     animation::Anim,
@@ -12,9 +12,7 @@ use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier2d::prelude::{Collider, RapierContext, Sensor};
 use rand::prelude::*;
 
-use super::{
-    player::PlayerPosition, sprite_flipping, AnimationTimer, GameOver, MoveDirection, Speed,
-};
+use super::{player::PlayerPosition, AnimationTimer, GameOver, MoveDirection, Speed};
 
 #[derive(Component)]
 pub struct Enemy;
@@ -241,21 +239,15 @@ fn set_move_to_player(
 fn enemy_intersecting_player(
     mut state: ResMut<State<GameState>>,
     rapier: Res<RapierContext>,
-    mut player: Query<(
-        &mut MainText,
-        &mut SubText,
-        Entity,
-        &mut GameOver,
-        &mut TextureAtlasSprite,
-    )>,
+    mut player: Query<(&mut MainText, &mut SubText, Entity, &mut GameOver)>,
     mut camera: Query<&mut OrthographicProjection>,
     score: Query<&Score>,
 ) {
-    for (mut text, mut sub, entity, mut game_over, mut sprite) in &mut player {
+    for (mut text, mut sub, entity, mut game_over) in &mut player {
         let intersections: Vec<(Entity, Entity, bool)> =
             rapier.intersections_with(entity).collect();
 
-        if intersections.len() > 0 {
+        if !intersections.is_empty() {
             bevy::log::info!("{}", intersections.len());
             game_over.0 = true;
             for mut projection in &mut camera {

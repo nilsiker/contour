@@ -6,17 +6,11 @@ mod lighting;
 mod rendering;
 mod text;
 
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::{diagnostic::LogDiagnosticsPlugin, prelude::*};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_kira_audio::AudioPlugin;
-use bevy_rapier2d::{
-    prelude::{NoUserData, RapierPhysicsPlugin},
-    render::RapierDebugRenderPlugin,
-};
+use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use game::{play_audio_system, ContourPlugins, GameState};
 use rendering::RenderingPlugin;
 
