@@ -1,12 +1,11 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
 use crate::character::{
     player::{Lantern, PlayerPosition},
     MoveDirection,
 };
 
-#[derive(Inspectable)]
+#[derive()]
 pub enum LightingMode {
     Dark,
     Lantern,
@@ -15,9 +14,9 @@ pub enum LightingMode {
 
 #[derive(Component)]
 pub struct Follow;
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct Lighting(pub LightingMode);
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct GlobalLight(pub bool);
 
 pub struct LightingPlugin;
@@ -29,8 +28,7 @@ impl Plugin for LightingPlugin {
             .add_system(kill_global_light)
             .add_system(global_light_trigger)
             .add_system(lantern_light_trigger)
-            .add_system(update_lighting_sprite)
-            .register_inspectable::<Lighting>();
+            .add_system(update_lighting_sprite);
     }
 }
 
@@ -130,8 +128,8 @@ fn update_lighting_sprite(
 }
 
 fn kill_global_light(input: Res<Input<KeyCode>>, mut query: Query<&mut GlobalLight>) {
-    if input.just_pressed(KeyCode::G) {
-        for mut global_light in &mut query {
+    for mut global_light in &mut query {
+        if input.just_pressed(KeyCode::G) && global_light.0 {
             global_light.0 = false;
         }
     }

@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use crate::{
     animation::Anim,
+    character::player::LanternTimer,
     game::GameState,
     lighting::{GlobalLight, Lighting},
     rendering,
     text::{MainText, Score, SubText},
 };
 use bevy::{prelude::*, sprite::Anchor};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier2d::prelude::{Collider, RapierContext, Sensor};
 use rand::prelude::*;
 
@@ -30,7 +30,7 @@ struct EnemyAnimations {
 #[derive(Component)]
 struct DangerousTimer(Timer);
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 struct Merge(usize);
 
 pub struct EnemyPlugin;
@@ -49,8 +49,7 @@ impl Plugin for EnemyPlugin {
                 SystemSet::on_update(GameState::InGame).with_system(merge),
             )
             .add_system(set_move_to_player)
-            .add_system(sprite_animation)
-            .register_inspectable::<Merge>();
+            .add_system(sprite_animation);
     }
 }
 
@@ -89,7 +88,7 @@ fn spawn_enemies(
                         1.0 - (score_query.single().0) / 100.0,
                     ));
                     let angle: f32 = rand::thread_rng().gen_range(0f32..std::f32::consts::TAU);
-                    let distance = rand::thread_rng().gen_range(20f32..100f32);
+                    let distance = 60f32;
                     let x = player.translation.x + (angle.cos() * distance);
                     let y = player.translation.y + (angle.sin() * distance);
                     commands
@@ -143,8 +142,9 @@ fn merge(
             let speed2 = entities[1].3 .0;
             let merge1 = entities[0].4 .0;
             let merge2 = entities[1].4 .0;
-            if merge1 > merge2 && merge1 < 5 {
+            if merge1 >= merge2 && merge1 < 5 {
                 let most_merged_entity = entities.get_mut(0).unwrap();
+                bevy::log::info!("merge {} into {}", merge1, merge2);
 
                 most_merged_entity.1.scale *= 1.1;
                 most_merged_entity.3 .0 = speed1.max(speed2);
@@ -152,18 +152,20 @@ fn merge(
                 let mut ball = most_merged_entity.2.as_ball_mut().unwrap();
                 ball.set_radius(ball.radius() * 1.1);
                 most_merged_entity.4 .0 += 1;
+
                 commands
                     .entity(entities.get_mut(1).unwrap().0)
                     .despawn_recursive();
-            } else if merge2 < 5 {
+            } else if merge2 >= merge1 && merge2 < 5 {
                 let most_merged_entity = entities.get_mut(1).unwrap();
-
+                bevy::log::info!("merge {} into {}", merge2, merge1);
                 most_merged_entity.1.scale *= 1.1;
                 most_merged_entity.3 .0 = speed1.max(speed2);
 
                 let mut ball = most_merged_entity.2.as_ball_mut().unwrap();
                 ball.set_radius(ball.radius() * 1.1);
                 most_merged_entity.4 .0 += 1;
+                bevy::log::info!("{}", most_merged_entity.4 .0);
                 commands
                     .entity(entities.get_mut(0).unwrap().0)
                     .despawn_recursive();
@@ -237,6 +239,7 @@ fn set_move_to_player(
 }
 
 fn enemy_intersecting_player(
+    mut commands: Commands,
     mut state: ResMut<State<GameState>>,
     rapier: Res<RapierContext>,
     mut player: Query<(&mut MainText, &mut SubText, Entity, &mut GameOver)>,
@@ -256,6 +259,10 @@ fn enemy_intersecting_player(
                 sub.0 = format!("Score: {}", score.single().0.round().to_owned());
             }
             state.set(GameState::GameOver).unwrap();
+            commands
+                .entity(entity)
+                .insert(Sensor)
+                .insert(LanternTimer(Timer::from_seconds(5.0, false)));
         }
     }
 }

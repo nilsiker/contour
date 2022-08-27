@@ -1,18 +1,17 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 
 use crate::{
     character::{player::ScreenTextTimer, GameOver},
     game::GameState,
 };
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct Score(pub f32);
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct MainText(pub String);
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct SubText(pub String);
 
 pub struct ExpositionText {
@@ -67,8 +66,7 @@ impl Plugin for TextPlugin {
                 .with_system(update_score_by_time)
                 .with_system(update_score_text),
         )
-        .add_system(show_center_text)
-        .register_inspectable::<Score>();
+        .add_system(show_center_text);
     }
 }
 

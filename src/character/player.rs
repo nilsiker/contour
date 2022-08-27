@@ -1,10 +1,10 @@
 use bevy::{prelude::*, sprite::Anchor};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 
 use crate::{
     animation::Anim,
     game::GameState,
+    lighting::GlobalLight,
     rendering,
     text::{MainText, SubText},
 };
@@ -13,13 +13,10 @@ use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
 
 pub struct PlayerPlugin;
 
-#[derive(Component, Inspectable)]
-enum Locomotion {
-    Idle,
-    Walking,
-}
+#[derive(Component)]
+struct Locomotion;
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct PlayerPosition {
     pub x: f32,
     pub y: f32,
@@ -36,11 +33,14 @@ pub struct PlayerAnimations {
 #[derive(Component, Reflect)]
 pub struct ScreenTextTimer(pub Timer);
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct LightDirection(pub Vec2);
 
-#[derive(Component, Inspectable)]
+#[derive(Component)]
 pub struct Lantern(pub bool);
+
+#[derive(Component)]
+pub struct LanternTimer(pub Timer);
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
@@ -53,9 +53,7 @@ impl Plugin for PlayerPlugin {
             )
             .add_system(sprite_animation)
             .add_system(lantern_toggle)
-            .register_inspectable::<MoveDirection>()
-            .register_inspectable::<LightDirection>()
-            .register_inspectable::<Lantern>();
+            .add_system(lantern_extinguisher);
     }
 }
 
@@ -88,7 +86,7 @@ fn setup(
         .insert(MoveDirection(Vec2::new(0., 0.)))
         .insert(Speed(15.0))
         .insert(LightDirection(Vec2::new(0., 0.)))
-        .insert(Locomotion::Idle)
+        .insert(Locomotion)
         .insert(AnimationTimer(Timer::from_seconds(0.12, true)))
         .insert(PlayerAnimations {
             walk_light: Anim::new(0, 7),
@@ -138,10 +136,22 @@ fn sprite_animation(
     }
 }
 
-fn lantern_toggle(input: Res<Input<KeyCode>>, mut query: Query<&mut Lantern>) {
-    if input.just_pressed(KeyCode::F) {
-        for mut lantern in &mut query {
-            lantern.0 = !lantern.0;
+fn lantern_toggle(
+    state: Res<State<GameState>>,
+    input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Lantern>,
+    light: Query<&GlobalLight>,
+) {
+    match state.current() {
+        GameState::GameOver => (),
+        _ => {
+            let light = light.single();
+
+            if input.just_pressed(KeyCode::F) && !light.0 {
+                for mut lantern in &mut query {
+                    lantern.0 = !lantern.0;
+                }
+            }
         }
     }
 }
@@ -167,6 +177,19 @@ fn lantern_direction(input: Res<Input<KeyCode>>, mut query: Query<&mut LightDire
             }
             vector.0.x = x;
             vector.0.y = y;
+        }
+    }
+}
+
+fn lantern_extinguisher(time: Res<Time>, mut query: Query<(&mut Lantern, &mut LanternTimer)>) {
+    if let Ok((mut lantern, mut timer)) = query.get_single_mut() {
+        if lantern.0 {
+            if timer.0.just_finished() {
+                lantern.0 = false;
+                timer.0.reset();
+            } else {
+                timer.0.tick(time.delta());
+            }
         }
     }
 }
