@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use crate::character::{
-    player::{Lantern, PlayerPosition},
-    MoveDirection,
-};
+use crate::{pawn::{player::{Lantern, Player}, MoveDirection}, consts::path};
 
 #[derive()]
 pub enum LightingMode {
@@ -39,7 +36,7 @@ pub fn setup(
 ) {
     let mut transform = Transform::from_xyz(0., 0., 998.);
     transform.scale = Vec3::new(2., 2., 2.);
-    let texture_handle = asset_server.load("darkness.png");
+    let texture_handle = asset_server.load(path::SPRITE_DARKNESS);
 
     let texture_atlas_handle = texture_atlases.add(TextureAtlas::from_grid(
         texture_handle,
@@ -60,13 +57,13 @@ pub fn setup(
 }
 
 fn follow_player(
-    players: Query<(&PlayerPosition, &MoveDirection)>,
+    players: Query<(&Transform, &MoveDirection), (Without<Follow>, With<Player>)>,
     mut follows: Query<&mut Transform, With<Follow>>,
 ) {
-    for (player_position, light_direction) in &players {
+    for (player_transform, light_direction) in &players {
         for mut follow_transform in &mut follows {
-            follow_transform.translation.x = player_position.x + light_direction.0.x * 10.;
-            follow_transform.translation.y = player_position.y + 8.0 + light_direction.0.y * 10.;
+            follow_transform.translation.x = player_transform.translation.x + light_direction.0.x * 10.;
+            follow_transform.translation.y = player_transform.translation.y + 8.0 + light_direction.0.y * 10.;
         }
     }
 }

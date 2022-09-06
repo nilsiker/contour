@@ -2,11 +2,12 @@ use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 
 use crate::{
-    animation::Anim,
     game::GameState,
-    lighting::GlobalLight,
-    rendering,
-    text::{MainText, SubText},
+    rendering::{
+        self,
+        animation::Anim,
+        lighting::GlobalLight,
+    }, consts::path,
 };
 
 use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
@@ -14,13 +15,7 @@ use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-struct Locomotion;
-
-#[derive(Component)]
-pub struct PlayerPosition {
-    pub x: f32,
-    pub y: f32,
-}
+pub struct Player;
 
 #[derive(Component)]
 pub struct PlayerAnimations {
@@ -48,8 +43,7 @@ impl Plugin for PlayerPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::InGame)
                     .with_system(movement_input)
-                    .with_system(lantern_direction)
-                    .with_system(update_player_position),
+                    .with_system(lantern_direction),
             )
             .add_system(sprite_animation)
             .add_system(lantern_toggle)
@@ -62,7 +56,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load("character.png");
+    let texture_handle = asset_server.load(path::SPRITE_PLAYER);
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 18, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let transform = Transform::from_xyz(0., 0., 0.);
@@ -78,7 +72,6 @@ fn setup(
             ..default()
         })
         .insert(Name::new("Player"))
-        .insert(PlayerPosition { x: 0., y: 0. })
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(GravityScale(0.))
         .insert(RigidBody::Dynamic)
@@ -86,7 +79,6 @@ fn setup(
         .insert(MoveDirection(Vec2::new(0., 0.)))
         .insert(Speed(15.0))
         .insert(LightDirection(Vec2::new(0., 0.)))
-        .insert(Locomotion)
         .insert(AnimationTimer(Timer::from_seconds(0.12, true)))
         .insert(PlayerAnimations {
             walk_light: Anim::new(0, 7),
@@ -95,8 +87,6 @@ fn setup(
             idle: Anim::new(17, 17),
         })
         .insert(Lantern(false))
-        .insert(MainText("In darkness you perish".to_owned()))
-        .insert(SubText("".to_owned()))
         .insert(ScreenTextTimer(Timer::from_seconds(5.0, false)))
         .insert(GameOver(false))
         .insert(rendering::OrderedZ);
@@ -228,12 +218,5 @@ fn movement_input(
             vector.0.y = y;
             vector.0 = vector.0.normalize_or_zero();
         }
-    }
-}
-
-fn update_player_position(mut query: Query<(&mut PlayerPosition, &Transform)>) {
-    for (mut player_data, transform) in &mut query {
-        player_data.x = transform.translation.x;
-        player_data.y = transform.translation.y;
     }
 }

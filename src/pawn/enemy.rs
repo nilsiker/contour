@@ -1,18 +1,16 @@
 use std::time::Duration;
 
 use crate::{
-    animation::Anim,
-    character::player::LanternTimer,
+    ai::Destination,
+    consts::path,
     game::GameState,
-    lighting::{GlobalLight, Lighting},
-    rendering,
-    text::{MainText, Score, SubText},
+    rendering::{self, animation::Anim, lighting::GlobalLight},
 };
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, RapierContext, Sensor};
 use rand::prelude::*;
 
-use super::{player::PlayerPosition, AnimationTimer, GameOver, MoveDirection, Speed};
+use super::{player::Player, AnimationTimer, MoveDirection, Speed};
 
 #[derive(Component)]
 pub struct Enemy;
@@ -40,7 +38,6 @@ impl Plugin for EnemyPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::InGame)
                     .with_system(spawn_enemies)
-                    .with_system(enemy_intersecting_player)
                     .with_system(hide_in_light)
                     .with_system(make_dangerous),
             )
@@ -48,7 +45,7 @@ impl Plugin for EnemyPlugin {
                 CoreStage::PostUpdate,
                 SystemSet::on_update(GameState::InGame).with_system(merge),
             )
-            .add_system(set_move_to_player)
+            .add_system(set_move_to_destination)
             .add_system(sprite_animation);
     }
 }
@@ -58,7 +55,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load("enemy.png");
+    let texture_handle = asset_server.load(path::SPRITE_ENEMY);
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 8, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
@@ -72,8 +69,7 @@ fn setup(
 fn spawn_enemies(
     mut commands: Commands,
     query: Query<&GlobalLight>,
-    player_query: Query<&Transform, With<PlayerPosition>>,
-    score_query: Query<&Score>,
+    player_query: Query<&Transform, With<Player>>,
     mut timer_query: Query<&mut EnemySpawnTimer>,
     time: Res<Time>,
     texture_atlas: Res<EnemyAtlas>,
@@ -84,9 +80,6 @@ fn spawn_enemies(
                 let mut timer = timer_query.single_mut();
 
                 if timer.0.just_finished() {
-                    timer.0.set_duration(Duration::from_secs_f32(
-                        1.0 - (score_query.single().0) / 100.0,
-                    ));
                     let angle: f32 = rand::thread_rng().gen_range(0f32..std::f32::consts::TAU);
                     let distance = 60f32;
                     let x = player.translation.x + (angle.cos() * distance);
@@ -208,62 +201,17 @@ fn sprite_animation(
     }
 }
 
-fn set_move_to_player(
-    mut enemy_query: Query<(&Transform, &mut MoveDirection), With<Enemy>>,
-    player_query: Query<&Transform, With<PlayerPosition>>,
-    lighting_query: Query<&Lighting>,
+fn set_move_to_destination(
+    mut enemy_query: Query<(&Transform, &Destination, &mut MoveDirection), With<Enemy>>,
 ) {
-    let player = player_query.single();
-    if let Ok(lighting) = lighting_query.get_single() {
-        for (enemy_transform, mut move_direction) in &mut enemy_query {
-            let delta_x = player.translation.x - enemy_transform.translation.x;
-            let delta_y = player.translation.y - enemy_transform.translation.y;
+    for (enemy_transform, destination, mut move_direction) in &mut enemy_query {
+        let delta_x = destination.0.translation.x - enemy_transform.translation.x;
+        let delta_y = destination.0.translation.y - enemy_transform.translation.y;
 
-            let mut direction = Vec2::new(delta_x, delta_y).normalize_or_zero();
+        let mut direction = Vec2::new(delta_x, delta_y).normalize_or_zero();
 
-            match lighting.0 {
-                crate::lighting::LightingMode::Lantern => {
-                    direction.x /= 2.0;
-                    direction.y /= 2.0;
-                }
-                crate::lighting::LightingMode::Light => {
-                    direction.x = 0.0;
-                    direction.y = 0.0;
-                }
-                _ => (),
-            }
-            move_direction.0.x = direction.x;
-            move_direction.0.y = direction.y;
-        }
-    }
-}
-
-fn enemy_intersecting_player(
-    mut commands: Commands,
-    mut state: ResMut<State<GameState>>,
-    rapier: Res<RapierContext>,
-    mut player: Query<(&mut MainText, &mut SubText, Entity, &mut GameOver)>,
-    mut camera: Query<&mut OrthographicProjection>,
-    score: Query<&Score>,
-) {
-    for (mut text, mut sub, entity, mut game_over) in &mut player {
-        let intersections: Vec<(Entity, Entity, bool)> =
-            rapier.intersections_with(entity).collect();
-
-        if !intersections.is_empty() {
-            bevy::log::info!("{}", intersections.len());
-            game_over.0 = true;
-            for mut projection in &mut camera {
-                projection.scale = 0.08;
-                text.0 = "GAME OVER".to_owned();
-                sub.0 = format!("Score: {}", score.single().0.round().to_owned());
-            }
-            state.set(GameState::GameOver).unwrap();
-            commands
-                .entity(entity)
-                .insert(Sensor)
-                .insert(LanternTimer(Timer::from_seconds(5.0, false)));
-        }
+        move_direction.0.x = direction.x;
+        move_direction.0.y = direction.y;
     }
 }
 
