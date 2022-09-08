@@ -3,26 +3,35 @@ use bevy::prelude::*;
 pub struct ReleaseActionButtonPlugin;
 impl Plugin for ReleaseActionButtonPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ButtonReleasedEvent>();
-        app.add_system(
-            fire_button_release_events
-                .chain(update_last_interaction_trackers.chain(release_buttons)),
-        );
+        app.add_event::<ButtonReleasedEvent>()
+            .add_event::<Action>()
+            .add_system(fire_button_release_events.chain(update_last_interaction_trackers))
+            .add_system(event_handlers::game_start)
+            .add_system(event_handlers::game_quit)
+            .add_system(event_handlers::options_open)
+            .add_system(event_handlers::lower_volume)
+            .add_system(event_handlers::raise_volume)
+            .add_system(event_handlers::options_close);
     }
 }
 
 #[derive(Component)]
 pub struct LastInteractionTracker(pub Interaction);
 
-#[derive(Component, Copy, Clone)]
+#[derive(Component)]
 pub struct ActionButton(pub Action);
 
-#[derive(Component, Copy, Clone)]
-pub enum Action {
-    QuitApp,
-}
+struct ButtonReleasedEvent(pub Action);
 
-struct ButtonReleasedEvent(Action);
+#[derive(Clone, Debug)]
+pub enum Action {
+    GameStart,
+    GameQuit,
+    OptionsOpen,
+    OptionsClose,
+    RaiseVolume,
+    LowerVolume,
+}
 
 fn update_last_interaction_trackers(
     mut query: Query<(&Interaction, &mut LastInteractionTracker), Changed<Interaction>>,
@@ -33,25 +42,70 @@ fn update_last_interaction_trackers(
 }
 
 fn fire_button_release_events(
-    mut ev_released_button: EventWriter<ButtonReleasedEvent>,
     query: Query<(&ActionButton, &LastInteractionTracker, &Interaction), Changed<Interaction>>,
+    mut button_actions: EventWriter<Action>,
 ) {
     for (button, last_interaction, interaction) in &query {
         if let Interaction::Clicked = last_interaction.0 {
             if let Interaction::Hovered = *interaction {
-                ev_released_button.send(ButtonReleasedEvent(button.0));
+                button_actions.send(button.0.clone());
             }
         }
     }
 }
 
-fn release_buttons(
-    mut released_button_events: EventReader<ButtonReleasedEvent>,
-    mut app_exit_events: EventWriter<bevy::app::AppExit>,
-) {
-    for released_button in released_button_events.iter() {
-        match released_button.0 {
-            Action::QuitApp => app_exit_events.send(bevy::app::AppExit),
+mod event_handlers {
+    use bevy::prelude::*;
+
+    use crate::{audio::Volume, game::GameState, ui::options_menu::OptionsMenu};
+
+    use super::Action;
+
+    pub fn game_start(mut actions: EventReader<Action>, mut state: ResMut<State<GameState>>) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::GameStart)) {
+            match state.set(GameState::InGame) {
+                Ok(_) => bevy::log::info!("state changed to {:?}", *state),
+                Err(e) => bevy::log::error!("{e}"),
+            }
+        }
+    }
+
+    pub fn game_quit(mut actions: EventReader<Action>, mut quit: EventWriter<bevy::app::AppExit>) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::GameQuit)) {
+            quit.send(bevy::app::AppExit);
+        }
+    }
+
+    pub fn options_open(
+        mut actions: EventReader<Action>,
+        mut options_menu: Query<&mut Style, With<OptionsMenu>>,
+    ) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::OptionsOpen)) {
+            options_menu.single_mut().display = Display::Flex;
+        }
+    }
+
+    pub fn options_close(
+        mut actions: EventReader<Action>,
+        mut options_menu: Query<&mut Style, With<OptionsMenu>>,
+    ) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::OptionsClose)) {
+            options_menu.single_mut().display = Display::None;
+        }
+    }
+
+    pub fn raise_volume(mut actions: EventReader<Action>, mut volume: ResMut<Volume>) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::RaiseVolume)) {
+            bevy::log::info!("raise vol");
+            volume.0 += 1.0;
+        }
+    }
+
+    pub fn lower_volume(mut actions: EventReader<Action>, mut volume: ResMut<Volume>) {
+        for _ in actions.iter().filter(|e| matches!(e, Action::LowerVolume)) {
+            bevy::log::info!("lower vol");
+
+            volume.0 -= 1.0
         }
     }
 }

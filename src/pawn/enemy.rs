@@ -202,13 +202,13 @@ fn sprite_animation(
 }
 
 fn set_move_to_destination(
-    mut enemy_query: Query<(&Transform, &Destination, &mut MoveDirection), With<Enemy>>,
+    mut enemies: Query<(&Transform, &Destination, &mut MoveDirection), With<Enemy>>,
 ) {
-    for (enemy_transform, destination, mut move_direction) in &mut enemy_query {
-        let delta_x = destination.0.translation.x - enemy_transform.translation.x;
-        let delta_y = destination.0.translation.y - enemy_transform.translation.y;
+    for (transform, destination, mut move_direction) in &mut enemies {
+        let delta_x = destination.0.translation.x - transform.translation.x;
+        let delta_y = destination.0.translation.y - transform.translation.y;
 
-        let mut direction = Vec2::new(delta_x, delta_y).normalize_or_zero();
+        let direction = Vec2::new(delta_x, delta_y).normalize_or_zero();
 
         move_direction.0.x = direction.x;
         move_direction.0.y = direction.y;

@@ -1,6 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{pawn::{player::{Lantern, Player}, MoveDirection}, consts::path};
+use crate::{
+    consts::path,
+    pawn::{
+        player::{Lantern, Player},
+        MoveDirection,
+    },
+};
 
 #[derive()]
 pub enum LightingMode {
@@ -62,8 +68,10 @@ fn follow_player(
 ) {
     for (player_transform, light_direction) in &players {
         for mut follow_transform in &mut follows {
-            follow_transform.translation.x = player_transform.translation.x + light_direction.0.x * 10.;
-            follow_transform.translation.y = player_transform.translation.y + 8.0 + light_direction.0.y * 10.;
+            follow_transform.translation.x =
+                player_transform.translation.x + light_direction.0.x * 10.;
+            follow_transform.translation.y =
+                player_transform.translation.y + 8.0 + light_direction.0.y * 10.;
         }
     }
 }

@@ -46,8 +46,8 @@ fn main() {
         .add_state_to_stage(CoreStage::PostUpdate, GameState::Prelude)
         .add_plugins(ContourRenderingPlugins)
         .add_plugins(ContourPawnPlugins)
-        .add_plugins(ContourUiPlugins)
-        .add_plugins(ContourAudioPlugins);
+        .add_plugins(ContourAudioPlugins)
+        .add_plugins(ContourUiPlugins);
 
     #[cfg(debug_assertions)]
     app.add_plugin(FrameTimeDiagnosticsPlugin)

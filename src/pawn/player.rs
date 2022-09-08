@@ -2,12 +2,9 @@ use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 
 use crate::{
+    consts::path,
     game::GameState,
-    rendering::{
-        self,
-        animation::Anim,
-        lighting::GlobalLight,
-    }, consts::path,
+    rendering::{self, animation::Anim, lighting::GlobalLight},
 };
 
 use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
