@@ -8,9 +8,11 @@ impl Plugin for ReleaseActionButtonPlugin {
             .add_system(fire_button_release_events.chain(update_last_interaction_trackers))
             .add_system(event_handlers::game_start)
             .add_system(event_handlers::game_quit)
+            .add_system(event_handlers::raise_bgm_volume)
+            .add_system(event_handlers::lower_bgm_volume)
+            .add_system(event_handlers::raise_sfx_volume)
+            .add_system(event_handlers::lower_sfx_volume)
             .add_system(event_handlers::options_open)
-            .add_system(event_handlers::lower_volume)
-            .add_system(event_handlers::raise_volume)
             .add_system(event_handlers::options_close);
     }
 }
@@ -29,8 +31,10 @@ pub enum Action {
     GameQuit,
     OptionsOpen,
     OptionsClose,
-    RaiseVolume,
-    LowerVolume,
+    RaiseVolumeBGM,
+    LowerVolumeBGM,
+    RaiseVolumeSFX,
+    LowerVolumeSFX,
 }
 
 fn update_last_interaction_trackers(
@@ -57,7 +61,7 @@ fn fire_button_release_events(
 mod event_handlers {
     use bevy::prelude::*;
 
-    use crate::{audio::Volume, game::GameState, ui::options_menu::OptionsMenu};
+    use crate::{audio::AudioChannels, game::GameState, ui::options_menu::OptionsMenu};
 
     use super::Action;
 
@@ -94,18 +98,37 @@ mod event_handlers {
         }
     }
 
-    pub fn raise_volume(mut actions: EventReader<Action>, mut volume: ResMut<Volume>) {
-        for _ in actions.iter().filter(|e| matches!(e, Action::RaiseVolume)) {
-            bevy::log::info!("raise vol");
-            volume.0 += 1.0;
+    pub fn raise_bgm_volume(mut actions: EventReader<Action>, mut volume: ResMut<AudioChannels>) {
+        for _ in actions
+            .iter()
+            .filter(|e| matches!(e, Action::RaiseVolumeBGM))
+        {
+            volume.bgm.0 += 1.0;
         }
     }
 
-    pub fn lower_volume(mut actions: EventReader<Action>, mut volume: ResMut<Volume>) {
-        for _ in actions.iter().filter(|e| matches!(e, Action::LowerVolume)) {
-            bevy::log::info!("lower vol");
-
-            volume.0 -= 1.0
+    pub fn lower_bgm_volume(mut actions: EventReader<Action>, mut volume: ResMut<AudioChannels>) {
+        for _ in actions
+            .iter()
+            .filter(|e| matches!(e, Action::LowerVolumeBGM))
+        {
+            volume.bgm.0 -= 1.0;
+        }
+    }
+    pub fn raise_sfx_volume(mut actions: EventReader<Action>, mut volume: ResMut<AudioChannels>) {
+        for _ in actions
+            .iter()
+            .filter(|e| matches!(e, Action::RaiseVolumeSFX))
+        {
+            volume.sfx.0 += 1.0;
+        }
+    }
+    pub fn lower_sfx_volume(mut actions: EventReader<Action>, mut volume: ResMut<AudioChannels>) {
+        for _ in actions
+            .iter()
+            .filter(|e| matches!(e, Action::LowerVolumeSFX))
+        {
+            volume.sfx.0 -= 1.0;
         }
     }
 }

@@ -7,10 +7,12 @@ mod game;
 mod pawn;
 mod rendering;
 mod ui;
+pub mod assets;
 
 use audio::ContourAudioPlugins;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy_egui::EguiPlugin;
 #[cfg(debug_assertions)]
 use bevy_inspector_egui::WorldInspectorPlugin;
 #[cfg(debug_assertions)]
@@ -41,6 +43,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(AudioPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(EguiPlugin)
         // Game specific
         .add_state(GameState::Prelude)
         .add_state_to_stage(CoreStage::PostUpdate, GameState::Prelude)

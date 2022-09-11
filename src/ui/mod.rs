@@ -1,10 +1,14 @@
 use bevy::prelude::*;
+use bevy_egui::{
+    egui::{Context, FontData, FontDefinitions, FontTweak},
+    EguiContext,
+};
 
-use crate::consts::path;
+use crate::{assets::bit_font_bytes, consts::path};
 
 use self::{
     main_menu::setup_main_menu,
-    options_menu::{setup_options_menu, update_sound_value_text},
+    options_menu::{update_sound_value_text, OptionsMenuPlugin},
     releasable_action_buttons::ReleaseActionButtonPlugin,
     styled_buttons::InteractionStyledButtonsPlugin,
 };
@@ -20,7 +24,8 @@ impl PluginGroup for ContourUiPlugins {
         group
             .add(CoreUiPlugin)
             .add(ReleaseActionButtonPlugin)
-            .add(InteractionStyledButtonsPlugin);
+            .add(InteractionStyledButtonsPlugin)
+            .add(OptionsMenuPlugin);
     }
 }
 
@@ -56,7 +61,40 @@ impl Default for UiData {
     }
 }
 
-pub fn setup(mut commands: Commands, assets: Res<AssetServer>, mut ui_data: ResMut<UiData>) {
+pub fn setup(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut ui_data: ResMut<UiData>,
+    mut egui: ResMut<EguiContext>,
+) {
+    let mut fonts = bevy_egui::egui::FontDefinitions::default();
+    fonts.font_data.insert(
+        "Bit".to_owned(),
+        bevy_egui::egui::FontData::from_static(bit_font_bytes()).tweak(FontTweak {
+            y_offset_factor: 0.1,
+            ..Default::default()
+        }),
+    );
+
+    fonts.families.insert(
+        bevy_egui::egui::FontFamily::Name("Bit".into()),
+        vec!["Bit".to_owned()],
+    );
+
+    fonts
+        .families
+        .get_mut(&bevy_egui::egui::FontFamily::Proportional)
+        .unwrap() //it works
+        .insert(0, "Bit".to_owned());
+
+    fonts
+        .families
+        .get_mut(&bevy_egui::egui::FontFamily::Monospace)
+        .unwrap()
+        .insert(0, "Bit".to_owned()); //.push("Helvetica".to_owned());
+
+    egui.ctx_mut().set_fonts(fonts);
+
     ui_data.font = assets.load(path::FONT_BIT);
     let mut ui = commands.spawn_bundle(NodeBundle {
         color: Color::rgba(0.0, 0.0, 0.0, 0.5).into(),
@@ -75,5 +113,4 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>, mut ui_data: ResM
     ui.insert(UI);
 
     setup_main_menu(&mut ui, ui_data.as_ref());
-    setup_options_menu(&mut ui, ui_data.as_ref());
 }
