@@ -50,7 +50,7 @@ pub fn setup(
     let mut fonts = bevy_egui::egui::FontDefinitions::default();
     fonts.font_data.insert(
         "Bit".to_owned(),
-        bevy_egui::egui::FontData::from_static(bit_font_bytes()).tweak(FontTweak {
+        bevy_egui::egui::FontData::from_owned(bit_font_bytes()).tweak(FontTweak {
             y_offset_factor: 0.1,
             ..Default::default()
         }),
