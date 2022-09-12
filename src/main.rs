@@ -1,13 +1,13 @@
 #![allow(clippy::type_complexity)]
 
 pub mod ai;
+pub mod assets;
 mod audio;
 mod consts;
 mod game;
 mod pawn;
 mod rendering;
 mod ui;
-pub mod assets;
 
 use audio::ContourAudioPlugins;
 #[cfg(debug_assertions)]

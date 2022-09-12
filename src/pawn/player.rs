@@ -102,7 +102,7 @@ fn sprite_animation(
 ) {
     for (mut anims, mut timer, mut sprite, direction, flashlight) in &mut query {
         match state.current() {
-            GameState::GameOver => sprite.index = anims.idle.step(),
+            GameState::_GameOver => sprite.index = anims.idle.step(),
             _ => {
                 timer.tick(time.delta());
                 if direction.0.length_squared() > 0. {
@@ -130,7 +130,7 @@ fn lantern_toggle(
     light: Query<&GlobalLight>,
 ) {
     match state.current() {
-        GameState::GameOver => (),
+        GameState::_GameOver => (),
         _ => {
             let light = light.single();
 

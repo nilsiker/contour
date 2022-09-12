@@ -1,27 +1,22 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{prelude::*, Audio, AudioSource};
 
-use super::{AudioChannels};
+use crate::ui::options_menu::AudioConfig;
 
-pub struct SFXPlayEvent(Handle<AudioSource>);
-
+pub struct SfxPlayEvent(Handle<AudioSource>);
 pub struct SFXPlugin;
 impl Plugin for SFXPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SFXPlayEvent>()
-            .add_system(handle_sfx_music_changed);
+        app.add_event::<SfxPlayEvent>().add_system(handle_play_sfx);
     }
 }
 
-pub fn handle_sfx_music_changed(
-    mut sfx_play_events: EventReader<SFXPlayEvent>,
+fn handle_play_sfx(
+    mut sfx_play_events: EventReader<SfxPlayEvent>,
     audio: Res<Audio>,
-    volumes: Res<AudioChannels>,
+    config: Res<AudioConfig>,
 ) {
     for event in sfx_play_events.iter() {
-        audio
-            .play(event.0.clone())
-            .looped()
-            .with_volume(volumes.sfx.0);
+        audio.play(event.0.clone()).looped().with_volume(config.sfx);
     }
 }

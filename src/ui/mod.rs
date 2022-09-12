@@ -1,30 +1,20 @@
 use bevy::prelude::*;
-use bevy_egui::{
-    egui::{Context, FontData, FontDefinitions, FontTweak},
-    EguiContext,
-};
+use bevy_egui::{egui::FontTweak, EguiContext};
 
 use crate::{assets::bit_font_bytes, consts::path};
 
-use self::{
-    main_menu::setup_main_menu,
-    options_menu::{update_sound_value_text, OptionsMenuPlugin},
-    releasable_action_buttons::ReleaseActionButtonPlugin,
-    styled_buttons::InteractionStyledButtonsPlugin,
-};
+use self::{main_menu::MainMenuPlugin, options_menu::OptionsMenuPlugin};
 
+mod styling;
 mod main_menu;
-mod options_menu;
-mod releasable_action_buttons;
-mod styled_buttons;
+pub mod options_menu;
 
 pub struct ContourUiPlugins;
 impl PluginGroup for ContourUiPlugins {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
         group
             .add(CoreUiPlugin)
-            .add(ReleaseActionButtonPlugin)
-            .add(InteractionStyledButtonsPlugin)
+            .add(MainMenuPlugin)
             .add(OptionsMenuPlugin);
     }
 }
@@ -33,8 +23,7 @@ struct CoreUiPlugin;
 impl Plugin for CoreUiPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(UiData::default())
-            .add_startup_system(setup)
-            .add_system(update_sound_value_text);
+            .add_startup_system(setup);
     }
 }
 
@@ -43,20 +32,11 @@ pub struct UI;
 
 pub struct UiData {
     font: Handle<Font>,
-    button_style: Style,
 }
 impl Default for UiData {
     fn default() -> Self {
         Self {
             font: Default::default(),
-            button_style: Style {
-                align_self: AlignSelf::Center,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                size: Size::new(Val::Percent(90.0), Val::Px(80.0)),
-                margin: UiRect::all(Val::Px(10.0)),
-                ..default()
-            },
         }
     }
 }
@@ -111,6 +91,4 @@ pub fn setup(
     });
     ui.insert(Name::new("UI"));
     ui.insert(UI);
-
-    setup_main_menu(&mut ui, ui_data.as_ref());
 }

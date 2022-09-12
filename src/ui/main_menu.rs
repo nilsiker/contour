@@ -1,131 +1,100 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
-
-use super::{
-    releasable_action_buttons::{Action, ActionButton, LastInteractionTracker},
-    UiData,
+use bevy::{app::AppExit, prelude::*};
+use bevy_egui::{
+    egui::{style::Margin, Color32, Frame, Pos2, Rect, RichText, Rounding, Vec2},
+    EguiContext,
 };
 
-#[derive(Component)]
-pub struct MainMenu;
+use super::{
+    styling::{MENU_BUTTON_FILL, MENU_FILL, MENU_STROKE},
+    options_menu::OptionsUiState,
+};
 
-pub fn setup_main_menu(ui: &mut EntityCommands, ui_data: &UiData) {
-    // HUD
-    ui.with_children(|hud| {
-        // MAIN MENU
-        hud.spawn_bundle(NodeBundle {
-            color: Color::rgba(0.5, 0.5, 0.5, 0.5).into(),
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect::new(Val::Px(150.0), Val::Auto, Val::Percent(25.0), Val::Auto),
-                flex_direction: FlexDirection::ColumnReverse,
-                align_self: AlignSelf::Center,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                size: Size::new(Val::Percent(20.0), Val::Percent(50.0)),
+pub struct MainMenuPlugin;
+impl Plugin for MainMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(update);
+    }
+}
+
+fn update(
+    mut egui: ResMut<EguiContext>,
+    windows: Res<Windows>,
+    mut options_menu_state: ResMut<OptionsUiState>,
+    mut exit: EventWriter<AppExit>,
+) {
+    let window = windows.get_primary().unwrap();
+    let save_exists = true; // TODO actually check for save.
+
+    let center_pos: Pos2 = (window.width() / 6.0, window.height() / 2.0).into();
+    let size: Vec2 = (window.width() / 6.0, window.height() / 2.0).into();
+    let button_size = [window.width() / 9.0, window.height() / 10.0];
+
+    bevy_egui::egui::Window::new("MainMenu")
+        .title_bar(false)
+        .fixed_rect(Rect::from_center_size(center_pos, size))
+        .frame(Frame {
+            outer_margin: Margin {
+                left: 50.0,
                 ..default()
             },
+            inner_margin: Margin::same(40.0),
+            fill: MENU_FILL,
+            rounding: Rounding::same(8.0),
+            stroke: MENU_STROKE,
             ..default()
         })
-        .insert(Name::new("MainMenu"))
-        .insert(MainMenu)
-        .with_children(|main_menu| {
-            // TITLE
-            main_menu.spawn_bundle(
-                TextBundle::from_section(
-                    "CONTOUR",
-                    TextStyle {
-                        color: Color::WHITE.into(),
-                        font: ui_data.font.clone(),
-                        font_size: 30.0,
-                    },
-                )
-                .with_style(Style {
-                    margin: UiRect::all(Val::Px(20.0)),
-                    ..default()
-                }),
-            );
+        .show(egui.ctx_mut(), |ui| {
+            ui.vertical_centered(|ui| {
+                ui.label(RichText::new("CONTOUR").color(Color32::WHITE).size(40.0));
+                ui.add_space(30.0);
 
-            // Start
-            main_menu
-                .spawn_bundle(ButtonBundle {
-                    style: ui_data.button_style.clone(),
-                    color: Color::BLACK.into(),
-                    ..default()
-                })
-                .insert(Name::new("StartButton"))
-                .insert(LastInteractionTracker(Interaction::None))
-                .insert(ActionButton(Action::GameStart))
-                .with_children(|parent| {
-                    parent.spawn_bundle(TextBundle::from_section(
-                        "Start",
-                        TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            font_size: 20.0,
-                            font: ui_data.font.clone(),
-                        },
-                    ));
-                });
+                if save_exists
+                    && ui
+                        .add_sized(
+                            button_size,
+                            bevy_egui::egui::Button::new(RichText::new("Continue").size(20.0))
+                                .stroke(MENU_STROKE)
+                                .fill(MENU_BUTTON_FILL),
+                        )
+                        .clicked()
+                {}
+                ui.add_space(10.0);
+                if ui
+                    .add_sized(
+                        button_size,
+                        bevy_egui::egui::Button::new(RichText::new("New").size(20.0))
+                            .stroke(MENU_STROKE)
+                            .fill(MENU_BUTTON_FILL),
+                    )
+                    .clicked()
+                {}
 
-            // LOAD
-            main_menu
-                .spawn_bundle(ButtonBundle {
-                    style: ui_data.button_style.clone(),
-                    color: Color::BLACK.into(),
-                    ..default()
-                })
-                .insert(Name::new("Load"))
-                .with_children(|parent| {
-                    parent.spawn_bundle(TextBundle::from_section(
-                        "Load",
-                        TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            font_size: 20.0,
-                            font: ui_data.font.clone(),
-                        },
-                    ));
-                });
+                ui.add_space(10.0);
 
-            // OPTIONS
-            main_menu
-                .spawn_bundle(ButtonBundle {
-                    style: ui_data.button_style.clone(),
-                    color: Color::BLACK.into(),
-                    ..default()
-                })
-                .insert(Name::new("Options"))
-                .insert(LastInteractionTracker(Interaction::None))
-                .insert(ActionButton(Action::OptionsOpen))
-                .with_children(|parent| {
-                    parent.spawn_bundle(TextBundle::from_section(
-                        "Options",
-                        TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            font_size: 20.0,
-                            font: ui_data.font.clone(),
-                        },
-                    ));
-                });
+                if ui
+                    .add_sized(
+                        button_size,
+                        bevy_egui::egui::Button::new(RichText::new("Options").size(20.0))
+                            .stroke(MENU_STROKE)
+                            .fill(MENU_BUTTON_FILL),
+                    )
+                    .clicked()
+                {
+                    options_menu_state.open = true
+                }
+                ui.add_space(10.0);
 
-            // QUIT
-            main_menu
-                .spawn_bundle(ButtonBundle {
-                    style: ui_data.button_style.clone(),
-                    color: Color::BLACK.into(),
-                    ..default()
-                })
-                .insert(Name::new("Quit"))
-                .insert(LastInteractionTracker(Interaction::None))
-                .insert(ActionButton(Action::GameQuit))
-                .with_children(|parent| {
-                    parent.spawn_bundle(TextBundle::from_section(
-                        "Quit",
-                        TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            font_size: 20.0,
-                            font: ui_data.font.clone(),
-                        },
-                    ));
-                });
+                if ui
+                    .add_sized(
+                        button_size,
+                        bevy_egui::egui::Button::new(RichText::new("Quit").size(20.0))
+                            .stroke(MENU_STROKE)
+                            .fill(MENU_BUTTON_FILL),
+                    )
+                    .clicked()
+                {
+                    exit.send(AppExit);
+                }
+            });
         });
-    });
 }

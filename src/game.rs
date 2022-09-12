@@ -2,5 +2,5 @@
 pub enum GameState {
     Prelude,
     InGame,
-    GameOver,
+    _GameOver,
 }

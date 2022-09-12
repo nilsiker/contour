@@ -1,44 +1,14 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::prelude::*;
 use bevy_egui::{
-    egui::{
-        self, style::Margin, Color32, FontId, Frame, Layout, Pos2, Rect, RichText, Rounding, Sense,
-        Stroke, Style, Vec2, Visuals,
-    },
+    egui::{self, style::Margin, Color32, Frame, Pos2, Rect, RichText, Rounding, Vec2},
     EguiContext,
 };
-use strum_macros::Display;
 
-use crate::audio::AudioChannels;
-
-use super::{
-    releasable_action_buttons::{Action, ActionButton, LastInteractionTracker},
-    UiData,
-};
-
-#[derive(Component)]
-pub struct OptionsMenu;
-
-#[derive(Component, Display)]
-pub enum OptionValue {
-    BgmVolume,
-    SfxVolume,
-}
+use super::styling::{MENU_BUTTON_FILL, MENU_FILL, MENU_STROKE};
 
 #[derive(Default)]
 pub struct OptionsUiState {
-    open: bool,
-    resolution: (i32, i32),
-    vsync: bool,
-    bgm: f64,
-    sfx: f64,
-}
-
-#[derive(Clone)]
-pub struct OptionStyles {
-    pub centered: Style,
-    pub options_button: Style,
-    pub options_button_text: TextStyle,
-    pub bit_font: TextStyle,
+    pub open: bool,
 }
 
 pub struct OptionsMenuPlugin;
@@ -46,49 +16,68 @@ impl Plugin for OptionsMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(OptionsUiState {
             open: true,
-            sfx: 50.,
-            bgm: 50.,
-            resolution: (1920, 1080),
             ..default()
         })
-        .add_system(render);
+        .insert_resource(VideoSettings::default())
+        .insert_resource(AudioConfig::default())
+        .add_system(update);
     }
 }
 
-pub fn render(
-    mut egui: ResMut<EguiContext>,
+// TODO Move these structs to a settings mod
+pub struct VideoSettings {
+    pub vsync: bool,
+    pub fullscreen: bool,
+    pub resolution: (f32, f32),
+}
+impl VideoSettings {
+    fn default() -> Self {
+        VideoSettings {
+            vsync: false,
+            fullscreen: false,
+            resolution: (1920.0, 1080.),
+        }
+    }
+}
+impl FromWorld for VideoSettings {
+    fn from_world(_: &mut World) -> Self {
+        VideoSettings {
+            vsync: false,
+            fullscreen: false,
+            resolution: (1920.0, 1080.),
+        }
+    }
+}
+pub struct AudioConfig {
+    pub sfx: f64,
+    pub bgm: f64,
+}
+
+impl AudioConfig {
+    fn default() -> Self {
+        AudioConfig {
+            sfx: 50.0,
+            bgm: 50.0,
+        }
+    }
+}
+impl FromWorld for AudioConfig {
+    fn from_world(_: &mut World) -> Self {
+        AudioConfig {
+            sfx: 50.0,
+            bgm: 50.0,
+        }
+    }
+}
+
+fn update(
+    egui: Res<EguiContext>,
     mut state: ResMut<OptionsUiState>,
+    mut video_to_apply: Local<VideoSettings>,
+    mut video: ResMut<VideoSettings>,
+    mut audio: ResMut<AudioConfig>,
     windows: Res<Windows>,
 ) {
-    // let styles = OptionStyles {
-    //     centered: Style {
-    //         align_content: AlignContent::Center,
-    //         align_items: AlignItems::Center,
-    //         align_self: AlignSelf::Center,
-    //         ..Default::default()
-    //     },
-    //     options_button: Style {
-    //         size: Size {
-    //             width: Val::Auto,
-    //             height: Val::Px(25.0),
-    //         },
-    //         align_content: AlignContent::Center,
-    //         align_items: AlignItems::Center,
-    //         align_self: AlignSelf::Center,
-    //         ..Default::default()
-    //     },
-    //     options_button_text: TextStyle {
-    //         font: ui_data.font.clone(),
-    //         font_size: 20.0,
-    //         color: Color::WHITE.into(),
-    //     },
-    //     bit_font: TextStyle {
-    //         font: ui_data.font.clone(),
-    //         font_size: 20.0,
-    //         ..default()
-    //     },
-    // };
-
     let window = windows.get_primary().unwrap();
     let center_pos: Pos2 = (window.width() / 2.0, window.height() / 2.0).into();
     let size: Vec2 = (window.width() / 3.0, window.height() / 2.0).into();
@@ -97,9 +86,9 @@ pub fn render(
             .title_bar(false)
             .frame(Frame {
                 inner_margin: Margin::same(40.0),
-                fill: Color32::DARK_GRAY,
+                fill: MENU_FILL,
                 rounding: Rounding::same(8.0),
-                stroke: Stroke::new(5.0, Color32::GRAY),
+                stroke: MENU_STROKE,
                 ..default()
             })
             .fixed_rect(Rect::from_center_size(center_pos, size))
@@ -113,41 +102,46 @@ pub fn render(
                             ui.label(RichText::new("VIDEO").color(Color32::WHITE).size(20.0));
 
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("Resolution").color(Color32::WHITE));
-                                let x = if state.resolution.0.to_string().len() < 4 {
-                                    format!(" {}", state.resolution.0)
-                                } else {
-                                    state.resolution.0.to_string()
-                                };
-                                let y = if state.resolution.1.to_string().len() < 4 {
-                                    format!("{} ", state.resolution.1)
-                                } else {
-                                    state.resolution.1.to_string()
-                                };
-                                egui::ComboBox::from_label("")
-                                    .selected_text(format!("{x}x{y}"))
-                                    .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut state.resolution,
-                                            (960, 540),
-                                            "960x540",
-                                        );
-                                        ui.selectable_value(
-                                            &mut state.resolution,
-                                            (1280, 720),
-                                            "1280x720",
-                                        );
-                                        ui.selectable_value(
-                                            &mut state.resolution,
-                                            (1920, 1080),
-                                            "1920x1080",
-                                        );
-                                    });
+                                ui.label(RichText::new("Fullscreen").color(Color32::WHITE));
+                                ui.add(egui::Checkbox::new(&mut video_to_apply.fullscreen, ""));
                             });
-
+                            if !video.fullscreen {
+                                ui.horizontal(|ui| {
+                                    ui.label(RichText::new("Resolution").color(Color32::WHITE));
+                                    let x = if video_to_apply.resolution.0.to_string().len() < 4 {
+                                        format!(" {}", video_to_apply.resolution.0)
+                                    } else {
+                                        video_to_apply.resolution.0.to_string()
+                                    };
+                                    let y = if video_to_apply.resolution.1.to_string().len() < 4 {
+                                        format!("{} ", video_to_apply.resolution.1)
+                                    } else {
+                                        video_to_apply.resolution.1.to_string()
+                                    };
+                                    egui::ComboBox::from_label("")
+                                        .selected_text(format!("{x}x{y}"))
+                                        .show_ui(ui, |ui| {
+                                            ui.selectable_value(
+                                                &mut video_to_apply.resolution,
+                                                (960.0, 540.0),
+                                                "960x540",
+                                            );
+                                            ui.selectable_value(
+                                                &mut video_to_apply.resolution,
+                                                (1280.0, 720.0),
+                                                "1280x720",
+                                            );
+                                            ui.selectable_value(
+                                                &mut video_to_apply.resolution,
+                                                (1920.0, 1080.0),
+                                                "1920x1080",
+                                            );
+                                        });
+                                });
+                            }
                             ui.horizontal(|ui| {
                                 ui.label(RichText::new("Vsync").color(Color32::WHITE));
-                                ui.add(egui::Checkbox::new(&mut state.vsync, ""));
+                                ui.add(egui::Checkbox::new(&mut video_to_apply.vsync, ""));
                             });
                         });
 
@@ -157,7 +151,7 @@ pub fn render(
                             ui.horizontal(|ui| {
                                 ui.label(RichText::new("BGM").color(Color32::WHITE));
                                 ui.add(
-                                    egui::Slider::new(&mut state.sfx, 0.0..=100.0)
+                                    egui::Slider::new(&mut audio.bgm, 0.0..=100.0)
                                         .integer()
                                         .step_by(10.0),
                                 );
@@ -165,7 +159,7 @@ pub fn render(
                             ui.horizontal(|ui| {
                                 ui.label(RichText::new("SFX").color(Color32::WHITE));
                                 ui.add(
-                                    egui::Slider::new(&mut state.bgm, 0.0..=100.0)
+                                    egui::Slider::new(&mut audio.sfx, 0.0..=100.0)
                                         .integer()
                                         .step_by(10.0),
                                 );
@@ -179,11 +173,15 @@ pub fn render(
                         if ui
                             .add_sized(
                                 [100.0, 50.0],
-                                egui::Button::new(RichText::new("Close").color(Color32::WHITE))
-                                    .fill(Color32::DARK_RED),
+                                egui::Button::new(RichText::new("Back").color(Color32::WHITE))
+                                    .fill(Color32::TRANSPARENT),
                             )
                             .clicked()
                         {
+                            video_to_apply.fullscreen = video.fullscreen;
+                            video_to_apply.vsync = video.vsync;
+                            video_to_apply.resolution = video.resolution;
+
                             state.open = false;
                         }
 
@@ -192,104 +190,16 @@ pub fn render(
                             .add_sized(
                                 [100.0, 50.0],
                                 egui::Button::new(RichText::new("Apply").color(Color32::WHITE))
-                                    .fill(Color32::DARK_BLUE),
+                                    .fill(MENU_BUTTON_FILL),
                             )
                             .clicked()
                         {
-                            state.open = false;
-                            bevy::log::warn!("TODO apply values to resources");
+                            video.fullscreen = video_to_apply.fullscreen;
+                            video.vsync = video_to_apply.vsync;
+                            video.resolution = video_to_apply.resolution;
                         }
                     })
                 })
             });
-    }
-
-    // ui.with_children(|ui| {
-    //     ui.spawn_bundle(NodeBundle {
-    //         color: Color::rgba(0.5, 0.5, 0.5, 0.5).into(),
-    //         style: Style {
-    //             display: Display::None,
-    //             position_type: PositionType::Absolute,
-    //             flex_direction: FlexDirection::ColumnReverse,
-    //             align_self: AlignSelf::Center,
-    //             align_items: AlignItems::Center,
-    //             justify_content: JustifyContent::Center,
-    //             size: Size::new(Val::Percent(20.0), Val::Auto),
-    //             padding: UiRect::all(Val::Px(10.0)),
-    //             ..default()
-    //         },
-    //         ..default()
-    //     })
-    //     .insert(Name::new("OptionsMenu"))
-    //     .insert(OptionsMenu)
-    //     .with_children(|options_menu| {
-    //         options_menu.spawn_bundle(
-    //             TextBundle::from_section(
-    //                 "VOLUME",
-    //                 TextStyle {
-    //                     color: Color::WHITE.into(),
-    //                     font: ui_data.font.clone(),
-    //                     font_size: 30.0,
-    //                 },
-    //             )
-    //             .with_style(Style {
-    //                 margin: UiRect::all(Val::Px(20.0)),
-    //                 ..default()
-    //             }),
-    //         );
-
-    //         spawn_float_control(
-    //             options_menu,
-    //             String::from("BGM"),
-    //             OptionValue::BgmVolume,
-    //             Action::LowerVolumeBGM,
-    //             Action::RaiseVolumeBGM,
-    //             styles.clone(),
-    //         );
-
-    //         spawn_float_control(
-    //             options_menu,
-    //             String::from("SFX"),
-    //             OptionValue::SfxVolume,
-    //             Action::LowerVolumeSFX,
-    //             Action::RaiseVolumeSFX,
-    //             styles,
-    //         );
-
-    //         options_menu
-    //             .spawn_bundle(ButtonBundle {
-    //                 style: ui_data.button_style.clone(),
-    //                 color: Color::BLACK.into(),
-    //                 ..default()
-    //             })
-    //             .insert(Name::new("Close"))
-    //             .insert(LastInteractionTracker(Interaction::None))
-    //             .insert(ActionButton(Action::OptionsClose))
-    //             .with_children(|parent| {
-    //                 parent.spawn_bundle(TextBundle::from_section(
-    //                     "Close",
-    //                     TextStyle {
-    //                         color: Color::rgb(0.9, 0.9, 0.9),
-    //                         font_size: 20.0,
-    //                         font: ui_data.font.clone(),
-    //                     },
-    //                 ));
-    //             });
-    //     });
-    // });
-}
-
-pub fn update_sound_value_text(
-    mut query: Query<(&mut Text, &OptionValue)>,
-    audio_channels: Res<AudioChannels>,
-) {
-    if audio_channels.is_changed() {
-        for (mut text, option_label) in &mut query {
-            let volume = match option_label {
-                OptionValue::BgmVolume => audio_channels.bgm.0,
-                OptionValue::SfxVolume => audio_channels.sfx.0,
-            };
-            text.sections[0].value = format!("{}", volume)
-        }
     }
 }
