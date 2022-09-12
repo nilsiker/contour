@@ -6,7 +6,7 @@ pub fn bit_font_bytes() -> Vec<u8> {
         Err(_) => panic!("Could not access program working directory."),
     };
     let path = work_dir.join("assets/fonts/PressStart2P.ttf");
-    let file = File::open(path).unwrap();
+    let file = File::open(path).expect("Could not find target file.");
     let mut reader = BufReader::new(file);
     let mut buf = Vec::new();
 
