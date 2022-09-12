@@ -21,7 +21,6 @@ fn setup(assets: Res<AssetServer>, audio: Res<Audio>, config: Res<AudioConfig>) 
 
 pub fn handle_background_music_changed(audio: Res<Audio>, config: Res<AudioConfig>) {
     if config.is_changed() {
-        bevy::log::info!("audio changed volume {}", config.bgm);
         audio.set_volume(config.bgm / 100.0);
     }
 }
