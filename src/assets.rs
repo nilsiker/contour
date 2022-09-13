@@ -1,4 +1,7 @@
-use std::{fs::File, io::{BufReader, Read}};
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+};
 
 pub fn bit_font_bytes() -> Vec<u8> {
     let work_dir = match std::env::current_dir() {

@@ -1,12 +1,13 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, Pos2, Rect, RichText, Rounding, Vec2},
+    egui::{epaint::Shadow, style::Margin, Frame, Pos2, Rect, Rounding, Vec2},
     EguiContext,
 };
 
 use super::{
-    styling::{MENU_BUTTON_FILL, MENU_FILL, MENU_STROKE},
     options_menu::OptionsUiState,
+    styling::{MENU_BUTTON_FILL, MENU_FILL},
+    text::{h1, h2},
 };
 
 pub struct MainMenuPlugin;
@@ -40,21 +41,19 @@ fn update(
             inner_margin: Margin::same(40.0),
             fill: MENU_FILL,
             rounding: Rounding::same(8.0),
-            stroke: MENU_STROKE,
-            ..default()
+            shadow: Shadow::big_dark(),
+            ..Default::default()
         })
         .show(egui.ctx_mut(), |ui| {
             ui.vertical_centered(|ui| {
-                ui.label(RichText::new("CONTOUR").color(Color32::WHITE).size(40.0));
+                ui.label(h1("CONTOUR"));
                 ui.add_space(30.0);
 
                 if save_exists
                     && ui
                         .add_sized(
                             button_size,
-                            bevy_egui::egui::Button::new(RichText::new("Continue").size(20.0))
-                                .stroke(MENU_STROKE)
-                                .fill(MENU_BUTTON_FILL),
+                            bevy_egui::egui::Button::new(h2("Continue")).fill(MENU_BUTTON_FILL),
                         )
                         .clicked()
                 {}
@@ -62,9 +61,7 @@ fn update(
                 if ui
                     .add_sized(
                         button_size,
-                        bevy_egui::egui::Button::new(RichText::new("New").size(20.0))
-                            .stroke(MENU_STROKE)
-                            .fill(MENU_BUTTON_FILL),
+                        bevy_egui::egui::Button::new(h2("New")).fill(MENU_BUTTON_FILL),
                     )
                     .clicked()
                 {}
@@ -74,9 +71,7 @@ fn update(
                 if ui
                     .add_sized(
                         button_size,
-                        bevy_egui::egui::Button::new(RichText::new("Options").size(20.0))
-                            .stroke(MENU_STROKE)
-                            .fill(MENU_BUTTON_FILL),
+                        bevy_egui::egui::Button::new(h2("Options")).fill(MENU_BUTTON_FILL),
                     )
                     .clicked()
                 {
@@ -87,9 +82,7 @@ fn update(
                 if ui
                     .add_sized(
                         button_size,
-                        bevy_egui::egui::Button::new(RichText::new("Quit").size(20.0))
-                            .stroke(MENU_STROKE)
-                            .fill(MENU_BUTTON_FILL),
+                        bevy_egui::egui::Button::new(h2("Quit")).fill(MENU_BUTTON_FILL),
                     )
                     .clicked()
                 {

@@ -1,13 +1,15 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::FontTweak, EguiContext};
 
-use crate::{assets::bit_font_bytes, consts::path};
+use crate::assets::bit_font_bytes;
 
 use self::{main_menu::MainMenuPlugin, options_menu::OptionsMenuPlugin};
 
-mod styling;
+mod dialogue;
 mod main_menu;
 pub mod options_menu;
+mod styling;
+mod text;
 
 pub struct ContourUiPlugins;
 impl PluginGroup for ContourUiPlugins {
@@ -22,31 +24,14 @@ impl PluginGroup for ContourUiPlugins {
 struct CoreUiPlugin;
 impl Plugin for CoreUiPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(UiData::default())
-            .add_startup_system(setup);
+        app.add_startup_system(initialize_font);
     }
 }
 
 #[derive(Component)]
 pub struct UI;
 
-pub struct UiData {
-    font: Handle<Font>,
-}
-impl Default for UiData {
-    fn default() -> Self {
-        Self {
-            font: Default::default(),
-        }
-    }
-}
-
-pub fn setup(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut ui_data: ResMut<UiData>,
-    mut egui: ResMut<EguiContext>,
-) {
+pub fn initialize_font(mut egui: ResMut<EguiContext>) {
     let mut fonts = bevy_egui::egui::FontDefinitions::default();
     fonts.font_data.insert(
         "Bit".to_owned(),
@@ -74,21 +59,4 @@ pub fn setup(
         .insert(0, "Bit".to_owned()); //.push("Helvetica".to_owned());
 
     egui.ctx_mut().set_fonts(fonts);
-
-    ui_data.font = assets.load(path::FONT_BIT);
-    let mut ui = commands.spawn_bundle(NodeBundle {
-        color: Color::rgba(0.0, 0.0, 0.0, 0.5).into(),
-        style: Style {
-            flex_direction: FlexDirection::ColumnReverse,
-            align_self: AlignSelf::Center,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-            margin: UiRect::all(Val::Auto),
-            ..default()
-        },
-        ..default()
-    });
-    ui.insert(Name::new("UI"));
-    ui.insert(UI);
 }

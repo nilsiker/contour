@@ -3,7 +3,7 @@ use bevy::{
     window::{PresentMode, WindowMode},
 };
 
-use crate::ui::options_menu::VideoSettings;
+use crate::config::{ConfigUpdateEvent, VideoSettings};
 
 use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
 pub mod animation;
@@ -32,9 +32,18 @@ impl Plugin for RenderingPlugin {
 
         app.insert_resource(ResolutionSetting((window.width(), window.height())))
             .insert_resource(VSyncSetting(false))
+            .add_startup_system(initiate_window_settings)
             .add_system(update_window_settings)
             .add_system(order_z_entities);
     }
+}
+
+fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettings>) {
+    let window = windows
+        .get_primary_mut()
+        .expect("primary window not loaded");
+
+    update_window_helper(window, &video);
 }
 
 fn order_z_entities(mut query: Query<&mut Transform, With<OrderedZ>>) {
@@ -43,23 +52,31 @@ fn order_z_entities(mut query: Query<&mut Transform, With<OrderedZ>>) {
     }
 }
 
-fn update_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettings>) {
-    if video.is_changed() {
+fn update_window_settings(
+    mut windows: ResMut<Windows>,
+    mut events: EventReader<ConfigUpdateEvent>, // TODO make own event..?
+    video: Res<VideoSettings>,
+) {
+    for _ in events.iter() {
         let window = windows.get_primary_mut().unwrap();
-        window.set_present_mode(if video.vsync {
-            PresentMode::AutoVsync
-        } else {
-            PresentMode::AutoNoVsync
-        });
-
-        window.set_mode(if video.fullscreen {
-            WindowMode::BorderlessFullscreen
-        } else {
-            WindowMode::Windowed
-        });
-
-        window.set_resolution(video.resolution.0, video.resolution.1);
+        update_window_helper(window, &video);
     }
+}
+
+fn update_window_helper(window: &mut Window, video: &Res<VideoSettings>) {
+    window.set_present_mode(if video.vsync {
+        PresentMode::AutoVsync
+    } else {
+        PresentMode::AutoNoVsync
+    });
+
+    window.set_mode(if video.fullscreen {
+        WindowMode::SizedFullscreen
+    } else {
+        WindowMode::Windowed
+    });
+
+    window.set_resolution(video.resolution.0, video.resolution.1);
 }
 
 #[derive(Component)]

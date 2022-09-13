@@ -1,10 +1,18 @@
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{self, style::Margin, Color32, Frame, Pos2, Rect, RichText, Rounding, Vec2},
+    egui::{self, epaint::Shadow, style::Margin, Color32, Frame, Pos2, Rect, Rounding, Vec2},
     EguiContext,
 };
 
-use super::styling::{MENU_BUTTON_FILL, MENU_FILL, MENU_STROKE};
+use crate::{
+    audio::bgm::BgmVolumeChangedEvent,
+    config::{AudioSettings, ConfigUpdateEvent, VideoSettings},
+};
+
+use super::{
+    styling::{MENU_BUTTON_FILL, MENU_FILL},
+    text::*,
+};
 
 #[derive(Default)]
 pub struct OptionsUiState {
@@ -14,68 +22,22 @@ pub struct OptionsUiState {
 pub struct OptionsMenuPlugin;
 impl Plugin for OptionsMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(OptionsUiState {
-            open: true,
-            ..default()
-        })
-        .insert_resource(VideoSettings::default())
-        .insert_resource(AudioConfig::default())
-        .add_system(update);
+        app.insert_resource(OptionsUiState { open: true })
+            .add_system(update);
     }
 }
 
 // TODO Move these structs to a settings mod
-pub struct VideoSettings {
-    pub vsync: bool,
-    pub fullscreen: bool,
-    pub resolution: (f32, f32),
-}
-impl VideoSettings {
-    fn default() -> Self {
-        VideoSettings {
-            vsync: false,
-            fullscreen: false,
-            resolution: (1920.0, 1080.),
-        }
-    }
-}
-impl FromWorld for VideoSettings {
-    fn from_world(_: &mut World) -> Self {
-        VideoSettings {
-            vsync: false,
-            fullscreen: false,
-            resolution: (1920.0, 1080.),
-        }
-    }
-}
-pub struct AudioConfig {
-    pub sfx: f64,
-    pub bgm: f64,
-}
-
-impl AudioConfig {
-    fn default() -> Self {
-        AudioConfig {
-            sfx: 50.0,
-            bgm: 50.0,
-        }
-    }
-}
-impl FromWorld for AudioConfig {
-    fn from_world(_: &mut World) -> Self {
-        AudioConfig {
-            sfx: 50.0,
-            bgm: 50.0,
-        }
-    }
-}
 
 fn update(
     egui: Res<EguiContext>,
     mut state: ResMut<OptionsUiState>,
     mut video_to_apply: Local<VideoSettings>,
+    mut audio_if_revert: Local<AudioSettings>,
     mut video: ResMut<VideoSettings>,
-    mut audio: ResMut<AudioConfig>,
+    mut audio: ResMut<AudioSettings>,
+    mut events: EventWriter<ConfigUpdateEvent>,
+    mut bgm_events: EventWriter<BgmVolumeChangedEvent>,
     windows: Res<Windows>,
 ) {
     let window = windows.get_primary().unwrap();
@@ -88,76 +50,79 @@ fn update(
                 inner_margin: Margin::same(40.0),
                 fill: MENU_FILL,
                 rounding: Rounding::same(8.0),
-                stroke: MENU_STROKE,
+                shadow: Shadow::big_dark(),
                 ..default()
             })
             .fixed_rect(Rect::from_center_size(center_pos, size))
             .show(egui.clone().ctx_mut(), |ui| {
                 ui.vertical_centered(|ui| {
-                    ui.label(RichText::new("OPTIONS").color(Color32::WHITE).size(40.0));
+                    ui.label(h1("OPTIONS"));
 
                     ui.add_space(20.0);
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
-                            ui.label(RichText::new("VIDEO").color(Color32::WHITE).size(20.0));
+                            ui.label(h2("VIDEO"));
 
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("Fullscreen").color(Color32::WHITE));
+                                ui.label(p("Fullscreen"));
                                 ui.add(egui::Checkbox::new(&mut video_to_apply.fullscreen, ""));
                             });
-                            if !video.fullscreen {
-                                ui.horizontal(|ui| {
-                                    ui.label(RichText::new("Resolution").color(Color32::WHITE));
-                                    let x = if video_to_apply.resolution.0.to_string().len() < 4 {
-                                        format!(" {}", video_to_apply.resolution.0)
-                                    } else {
-                                        video_to_apply.resolution.0.to_string()
-                                    };
-                                    let y = if video_to_apply.resolution.1.to_string().len() < 4 {
-                                        format!("{} ", video_to_apply.resolution.1)
-                                    } else {
-                                        video_to_apply.resolution.1.to_string()
-                                    };
-                                    egui::ComboBox::from_label("")
-                                        .selected_text(format!("{x}x{y}"))
-                                        .show_ui(ui, |ui| {
-                                            ui.selectable_value(
-                                                &mut video_to_apply.resolution,
-                                                (960.0, 540.0),
-                                                "960x540",
-                                            );
-                                            ui.selectable_value(
-                                                &mut video_to_apply.resolution,
-                                                (1280.0, 720.0),
-                                                "1280x720",
-                                            );
-                                            ui.selectable_value(
-                                                &mut video_to_apply.resolution,
-                                                (1920.0, 1080.0),
-                                                "1920x1080",
-                                            );
-                                        });
-                                });
-                            }
+
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("Vsync").color(Color32::WHITE));
+                                ui.label(p("Resolution"));
+                                let x = if video_to_apply.resolution.0.to_string().len() < 4 {
+                                    format!(" {}", video_to_apply.resolution.0)
+                                } else {
+                                    video_to_apply.resolution.0.to_string()
+                                };
+                                let y = if video_to_apply.resolution.1.to_string().len() < 4 {
+                                    format!("{} ", video_to_apply.resolution.1)
+                                } else {
+                                    video_to_apply.resolution.1.to_string()
+                                };
+                                egui::ComboBox::from_label("")
+                                    .selected_text(format!("{x}x{y}"))
+                                    .show_ui(ui, |ui| {
+                                        ui.selectable_value(
+                                            &mut video_to_apply.resolution,
+                                            (960.0, 540.0),
+                                            "960x540",
+                                        );
+                                        ui.selectable_value(
+                                            &mut video_to_apply.resolution,
+                                            (1280.0, 720.0),
+                                            "1280x720",
+                                        );
+                                        ui.selectable_value(
+                                            &mut video_to_apply.resolution,
+                                            (1920.0, 1080.0),
+                                            "1920x1080",
+                                        );
+                                    });
+                            });
+
+                            ui.horizontal(|ui| {
+                                ui.label(p("Vsync"));
                                 ui.add(egui::Checkbox::new(&mut video_to_apply.vsync, ""));
                             });
                         });
 
                         ui.vertical(|ui| {
-                            ui.label(RichText::new("AUDIO").color(Color32::WHITE).size(20.0));
+                            ui.label(h2("AUDIO"));
 
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("BGM").color(Color32::WHITE));
-                                ui.add(
+                                ui.label(p("BGM"));
+                                let bgm_slider = ui.add(
                                     egui::Slider::new(&mut audio.bgm, 0.0..=100.0)
                                         .integer()
                                         .step_by(10.0),
                                 );
+                                if bgm_slider.changed() {
+                                    bgm_events.send(BgmVolumeChangedEvent);
+                                }
                             });
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("SFX").color(Color32::WHITE));
+                                ui.label(p("SFX"));
                                 ui.add(
                                     egui::Slider::new(&mut audio.sfx, 0.0..=100.0)
                                         .integer()
@@ -173,14 +138,16 @@ fn update(
                         if ui
                             .add_sized(
                                 [100.0, 50.0],
-                                egui::Button::new(RichText::new("Back").color(Color32::WHITE))
-                                    .fill(Color32::TRANSPARENT),
+                                egui::Button::new(p("Back")).fill(Color32::TRANSPARENT),
                             )
                             .clicked()
                         {
                             video_to_apply.fullscreen = video.fullscreen;
                             video_to_apply.vsync = video.vsync;
                             video_to_apply.resolution = video.resolution;
+
+                            audio.bgm = audio_if_revert.bgm;
+                            audio.sfx = audio_if_revert.sfx;
 
                             state.open = false;
                         }
@@ -189,14 +156,17 @@ fn update(
                         if ui
                             .add_sized(
                                 [100.0, 50.0],
-                                egui::Button::new(RichText::new("Apply").color(Color32::WHITE))
-                                    .fill(MENU_BUTTON_FILL),
+                                egui::Button::new(em("Apply")).fill(MENU_BUTTON_FILL),
                             )
                             .clicked()
                         {
                             video.fullscreen = video_to_apply.fullscreen;
                             video.vsync = video_to_apply.vsync;
                             video.resolution = video_to_apply.resolution;
+                            audio_if_revert.bgm = audio.bgm;
+                            audio_if_revert.sfx = audio.sfx;
+
+                            events.send(ConfigUpdateEvent);
                         }
                     })
                 })
