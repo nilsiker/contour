@@ -5,11 +5,10 @@ use crate::assets::bit_font_bytes;
 
 use self::{main_menu::MainMenuPlugin, options_menu::OptionsMenuPlugin};
 
-mod dialogue;
 mod main_menu;
-pub mod options_menu;
-mod styling;
-mod text;
+mod options_menu;
+pub mod styling;
+pub mod text;
 
 pub struct ContourUiPlugins;
 impl PluginGroup for ContourUiPlugins {

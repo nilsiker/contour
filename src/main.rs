@@ -5,10 +5,11 @@ pub mod assets;
 mod audio;
 mod config;
 mod consts;
+mod dialogue;
 mod game;
 mod pawn;
 mod rendering;
-mod ui;
+pub mod ui;
 
 use audio::ContourAudioPlugins;
 #[cfg(debug_assertions)]
@@ -23,6 +24,7 @@ use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
 use bevy_kira_audio::AudioPlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use config::ConfigPlugin;
+use dialogue::DialoguePlugin;
 use game::GameState;
 use pawn::ContourPawnPlugins;
 use rendering::ContourRenderingPlugins;
@@ -36,8 +38,10 @@ fn main() {
         .insert_resource(WindowDescriptor {
             title: "Contour".to_string(),
             present_mode: PresentMode::AutoNoVsync,
+            width: 1920.0,
+            height: 1080.0,
             transparent: true,
-            position: WindowPosition::At(Vec2 { x: 1720.0, y: 0.0 }),
+            position: WindowPosition::At(Vec2 { x: 1400.0, y: 0.0 }),
             resizable: false,
             ..default()
         })
@@ -53,7 +57,8 @@ fn main() {
         .add_plugins(ContourRenderingPlugins)
         .add_plugins(ContourPawnPlugins)
         .add_plugins(ContourAudioPlugins)
-        .add_plugins(ContourUiPlugins);
+        .add_plugins(ContourUiPlugins)
+        .add_plugin(DialoguePlugin);
 
     #[cfg(debug_assertions)]
     app.add_plugin(FrameTimeDiagnosticsPlugin)

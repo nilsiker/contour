@@ -6,7 +6,7 @@ use bevy_egui::{
 
 use super::{
     options_menu::OptionsUiState,
-    styling::{MENU_BUTTON_FILL, MENU_FILL},
+    styling::{MENU_BUTTON_FILL, MENU_FILL, MENU_STROKE},
     text::{h1, h2},
 };
 
@@ -26,7 +26,7 @@ fn update(
     let window = windows.get_primary().unwrap();
     let save_exists = true; // TODO actually check for save.
 
-    let center_pos: Pos2 = (window.width() / 6.0, window.height() / 2.0).into();
+    let center_pos: Pos2 = (window.width() / 6.0, (window.height() / 2.0) - 40.0).into();
     let size: Vec2 = (window.width() / 6.0, window.height() / 2.0).into();
     let button_size = [window.width() / 9.0, window.height() / 10.0];
 
@@ -42,7 +42,7 @@ fn update(
             fill: MENU_FILL,
             rounding: Rounding::same(8.0),
             shadow: Shadow::big_dark(),
-            ..Default::default()
+            stroke:MENU_STROKE,
         })
         .show(egui.ctx_mut(), |ui| {
             ui.vertical_centered(|ui| {
