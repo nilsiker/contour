@@ -6,7 +6,6 @@ use bevy::{
 use crate::config::{ConfigUpdateEvent, VideoSettings};
 
 use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
-pub mod animation;
 pub mod camera;
 pub mod lighting;
 

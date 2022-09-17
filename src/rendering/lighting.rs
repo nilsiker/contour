@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    consts::path,
+    assets::paths,
     pawn::{
         player::{Lantern, Player},
         MoveDirection,
@@ -42,7 +42,7 @@ pub fn setup(
 ) {
     let mut transform = Transform::from_xyz(0., 0., 998.);
     transform.scale = Vec3::new(2., 2., 2.);
-    let texture_handle = asset_server.load(path::SPRITE_DARKNESS);
+    let texture_handle = asset_server.load(paths::SPRITE_DARKNESS);
 
     let texture_atlas_handle = texture_atlases.add(TextureAtlas::from_grid(
         texture_handle,

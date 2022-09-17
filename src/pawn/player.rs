@@ -3,10 +3,10 @@ use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 use iyes_loopless::prelude::*;
 
 use crate::{
-    consts::path,
-    game::WorldState,
-    rendering::{self, animation::Anim, lighting::GlobalLight},
-    state::paused,
+    animation::Anim,
+    assets::paths,
+    rendering::{self, lighting::GlobalLight},
+    state::GameState,
 };
 
 use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
@@ -38,15 +38,15 @@ pub struct LanternTimer(pub Timer);
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system_set(
-                SystemSet::on_update(WorldState::Unpaused)
-                    .with_system(movement_input)
-                    .with_system(lantern_direction),
-            )
-            .add_system(sprite_animation.run_if_not(paused))
-            .add_system(lantern_toggle)
-            .add_system(lantern_extinguisher);
+        app.add_startup_system(setup).add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::InGame)
+                .with_system(movement_input)
+                .with_system(lantern_input)
+                .with_system(sprite_animation)
+                .with_system(lantern_direction)
+                .into(),
+        );
     }
 }
 
@@ -55,7 +55,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load(path::SPRITE_PLAYER);
+    let texture_handle = asset_server.load(paths::SPRITE_PLAYER);
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 18, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     let transform = Transform::from_xyz(0., 0., 0.);
@@ -119,7 +119,7 @@ fn sprite_animation(
     }
 }
 
-fn lantern_toggle(
+fn lantern_input(
     input: Res<Input<KeyCode>>,
     mut query: Query<&mut Lantern>,
     light: Query<&GlobalLight>,

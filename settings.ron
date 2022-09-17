@@ -1,0 +1,8 @@
+(
+    bgm: 50.0,
+    sfx: 50.0,
+    vsync: false,
+    fullscreen: false,
+    resolution: (1920.0, 1080.0),
+)
+

@@ -4,13 +4,14 @@ pub mod ai;
 pub mod assets;
 mod audio;
 mod config;
-mod consts;
+mod paths;
 mod dialogue;
 mod game;
 mod pawn;
 mod rendering;
 pub mod ui;
 pub mod state;
+pub mod animation;
 
 use audio::ContourAudioPlugins;
 #[cfg(debug_assertions)]
@@ -28,7 +29,7 @@ use bevy_kira_audio::AudioPlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use config::ConfigPlugin;
 use dialogue::DialoguePlugin;
-use game::{GameState, WorldState};
+use state::{GameState};
 use pawn::PawnPlugin;
 use rendering::ContourRenderingPlugins;
 use ui::ContourUiPlugins;
@@ -54,8 +55,7 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(EguiPlugin)
         // Game specific
-        .add_state(WorldState::Unpaused)
-        .add_state(GameState::Prelude)
+        .add_loopless_state(GameState::UI)
         .add_plugin(ConfigPlugin)
         .add_plugins(ContourRenderingPlugins)
         .add_plugin(PawnPlugin)

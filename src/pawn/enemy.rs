@@ -2,8 +2,9 @@ use std::time::Duration;
 
 use crate::{
     ai::Destination,
-    consts::path,
-    rendering::{self, animation::Anim, lighting::GlobalLight},
+    animation::Anim,
+    assets::paths,
+    rendering::{self, lighting::GlobalLight},
 };
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, RapierContext, Sensor};
@@ -44,7 +45,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let texture_handle = asset_server.load(path::SPRITE_ENEMY);
+    let texture_handle = asset_server.load(paths::SPRITE_ENEMY);
     let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 8, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 

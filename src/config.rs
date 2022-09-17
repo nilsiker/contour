@@ -1,12 +1,15 @@
 use bevy::prelude::*;
+use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
 
 use std::{fs, io::Write, path::PathBuf};
 
+const SETTINGS_FILENAME: &str = "settings.ron";
+
 fn get_path() -> PathBuf {
     std::env::current_dir()
         .expect("Could not access current work directory")
-        .join("settings.json")
+        .join(SETTINGS_FILENAME)
 }
 
 pub struct ConfigPlugin;
@@ -90,7 +93,7 @@ fn save_config_to_file(
         events.clear();
         let settings_path = std::env::current_dir()
             .expect("Could not access current work directory")
-            .join("settings.json");
+            .join(SETTINGS_FILENAME);
         let mut settings = match fetch_settings(settings_path.clone()) {
             Ok(settings) => settings,
             Err(_) => Settings::default(),
@@ -107,8 +110,9 @@ fn save_config_to_file(
         }
 
         let mut file = fs::File::create(settings_path).expect("Unable to create file");
-        let new_settings = serde_json::to_string_pretty::<Settings>(&settings)
-            .expect("Failed to parse settings into file format");
+        let new_settings =
+            ron::ser::to_string_pretty::<Settings>(&settings, PrettyConfig::default())
+                .expect("Failed to parse settings into file format");
         match write!(&mut file, "{}", new_settings) {
             Ok(_) => bevy::log::info!("saved to config"),
             Err(_) => bevy::log::error!("failed to write to config"),
@@ -118,7 +122,7 @@ fn save_config_to_file(
 
 fn fetch_settings(path: PathBuf) -> Result<Settings, &'static str> {
     match fs::read_to_string(path) {
-        Ok(data) => match serde_json::from_str::<Settings>(data.as_str()) {
+        Ok(data) => match ron::from_str::<Settings>(data.as_str()) {
             Ok(settings) => Ok(settings),
             Err(_) => Ok(Settings::default()),
         },
