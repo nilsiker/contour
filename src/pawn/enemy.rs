@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::{
     ai::Destination,
-    animation::Anim,
+    animation::Clip,
     assets::paths,
     rendering::{self, lighting::GlobalLight},
 };
@@ -10,7 +10,7 @@ use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, RapierContext, Sensor};
 use rand::prelude::*;
 
-use super::{player::Player, AnimationTimer, MoveDirection, Speed};
+use super::{player::Player,  MoveDirection, Speed};
 
 #[derive(Component)]
 pub struct Enemy;
@@ -22,7 +22,7 @@ struct EnemyAtlas(Handle<TextureAtlas>);
 
 #[derive(Component)]
 struct EnemyAnimations {
-    stalk: Anim,
+    stalk: Clip,
 }
 
 #[derive(Component)]
@@ -35,8 +35,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
-            .add_system(set_move_to_destination)
-            .add_system(sprite_animation);
+            .add_system(set_move_to_destination);
     }
 }
 
@@ -89,9 +88,8 @@ fn spawn_enemies(
                         .insert(MoveDirection(Vec2::default()))
                         .insert(Speed(rand::thread_rng().gen_range(1f32..18f32)))
                         .insert(EnemyAnimations {
-                            stalk: Anim::new(0, 7),
+                            stalk: Clip::new(0, 7),
                         })
-                        .insert(AnimationTimer(Timer::from_seconds(0.1, true)))
                         .insert(rendering::OrderedZ)
                         .insert(DangerousTimer(Timer::from_seconds(0.5, false)))
                         .insert(Merge(0));
@@ -168,25 +166,6 @@ fn make_dangerous(
             dangerous.0.reset();
         } else {
             dangerous.0.tick(time.delta());
-        }
-    }
-}
-
-fn sprite_animation(
-    time: Res<Time>,
-    mut query: Query<(
-        &mut EnemyAnimations,
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-    )>,
-    lighting_query: Query<&GlobalLight>,
-) {
-    for (mut anims, mut timer, mut sprite) in &mut query {
-        timer.tick(time.delta());
-        if let Ok(global_light) = lighting_query.get_single() {
-            if !global_light.0 && timer.just_finished() {
-                sprite.index = anims.stalk.step()
-            }
         }
     }
 }

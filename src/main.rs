@@ -1,19 +1,20 @@
 #![allow(clippy::type_complexity, clippy::too_many_arguments)]
 
 pub mod ai;
+pub mod animation;
 pub mod assets;
 mod audio;
 mod config;
-mod paths;
 mod dialogue;
 mod game;
+mod paths;
 mod pawn;
 mod rendering;
-pub mod ui;
 pub mod state;
-pub mod animation;
+pub mod ui;
+mod level;
 
-use audio::ContourAudioPlugins;
+use audio::AudioPlugin;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_egui::EguiPlugin;
@@ -23,16 +24,8 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::render::RapierDebugRenderPlugin;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
-use iyes_loopless::prelude::*;
-
-use bevy_kira_audio::AudioPlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
-use config::ConfigPlugin;
-use dialogue::DialoguePlugin;
-use state::{GameState};
-use pawn::PawnPlugin;
-use rendering::ContourRenderingPlugins;
-use ui::ContourUiPlugins;
+use game::ContourPlugins;
 
 fn main() {
     let mut app = App::new();
@@ -54,14 +47,8 @@ fn main() {
         .add_plugin(AudioPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(EguiPlugin)
-        // Game specific
-        .add_loopless_state(GameState::UI)
-        .add_plugin(ConfigPlugin)
-        .add_plugins(ContourRenderingPlugins)
-        .add_plugin(PawnPlugin)
-        .add_plugins(ContourAudioPlugins)
-        .add_plugins(ContourUiPlugins)
-        .add_plugin(DialoguePlugin);
+        // Add Contour game plugins
+        .add_plugins(ContourPlugins);
 
     #[cfg(debug_assertions)]
     app.add_plugin(FrameTimeDiagnosticsPlugin)

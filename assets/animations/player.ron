@@ -1,0 +1,22 @@
+{
+    "walk_light" : (
+        current:0,
+        start: 0,
+        end:7,
+    ),
+    "walk":(
+        current:8,
+        start: 8,
+        end:15,
+    ),
+    "idle":(
+        current:17,
+        start: 17,
+        end:17,
+    ),
+    "idle_light":(
+        current:16,
+        start: 16,
+        end:16,
+    )
+}

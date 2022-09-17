@@ -5,19 +5,11 @@ use bevy::prelude::*;
 use bgm::BackgroundMusicPlugin;
 use sfx::SFXPlugin;
 
-struct AudioPlugin;
+pub struct AudioPlugin;
 impl Plugin for AudioPlugin {
-    fn build(&self, _: &mut App) {
-        // Probably add some common denominators
-    }
-}
-
-pub struct ContourAudioPlugins;
-impl PluginGroup for ContourAudioPlugins {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group
-            .add(AudioPlugin)
-            .add(BackgroundMusicPlugin)
-            .add(SFXPlugin);
+    fn build(&self, app: &mut App) {
+        app.add_plugin(bevy_kira_audio::AudioPlugin)
+            .add_plugin(BackgroundMusicPlugin)
+            .add_plugin(SFXPlugin);
     }
 }

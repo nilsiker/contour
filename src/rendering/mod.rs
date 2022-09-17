@@ -9,17 +9,7 @@ use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
 pub mod camera;
 pub mod lighting;
 
-pub struct ContourRenderingPlugins;
-impl PluginGroup for ContourRenderingPlugins {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group
-            .add(RenderingPlugin)
-            .add(FollowCameraPlugin)
-            .add(LightingPlugin);
-    }
-}
-
-struct RenderingPlugin;
+pub struct RenderingPlugin;
 impl Plugin for RenderingPlugin {
     fn build(&self, app: &mut App) {
         let window = app
@@ -28,12 +18,13 @@ impl Plugin for RenderingPlugin {
             .unwrap()
             .get_primary()
             .unwrap();
-
         app.insert_resource(ResolutionSetting((window.width(), window.height())))
             .insert_resource(VSyncSetting(false))
             .add_startup_system(initiate_window_settings)
             .add_system(update_window_settings)
-            .add_system(order_z_entities);
+            .add_system(order_z_entities)
+            .add_plugin(FollowCameraPlugin)
+            .add_plugin(LightingPlugin);
     }
 }
 

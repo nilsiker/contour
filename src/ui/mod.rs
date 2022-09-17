@@ -10,25 +10,14 @@ mod options_menu;
 pub mod styling;
 pub mod text;
 
-pub struct ContourUiPlugins;
-impl PluginGroup for ContourUiPlugins {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group
-            .add(CoreUiPlugin)
-            .add(MainMenuPlugin)
-            .add(OptionsMenuPlugin);
-    }
-}
-
-struct CoreUiPlugin;
-impl Plugin for CoreUiPlugin {
+pub struct UiPlugin;
+impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(initialize_font);
+        app.add_startup_system(initialize_font)
+            .add_plugin(MainMenuPlugin)
+            .add_plugin(OptionsMenuPlugin);
     }
 }
-
-#[derive(Component)]
-pub struct UI;
 
 pub fn initialize_font(mut egui: ResMut<EguiContext>) {
     let mut fonts = bevy_egui::egui::FontDefinitions::default();

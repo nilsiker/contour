@@ -1,15 +1,17 @@
+use std::path::PathBuf;
+
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 use iyes_loopless::prelude::*;
 
 use crate::{
-    animation::Anim,
-    assets::paths,
+    animation::{Animations, Clip},
+    assets::paths::{self},
     rendering::{self, lighting::GlobalLight},
     state::GameState,
 };
 
-use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
+use super::{enemy::Enemy, GameOver, MoveDirection, Speed};
 
 pub struct PlayerPlugin;
 
@@ -18,10 +20,10 @@ pub struct Player;
 
 #[derive(Component)]
 pub struct PlayerAnimations {
-    idle: Anim,
-    walk: Anim,
-    idle_light: Anim,
-    walk_light: Anim,
+    idle: Clip,
+    walk: Clip,
+    idle_light: Clip,
+    walk_light: Clip,
 }
 
 #[derive(Component, Reflect)]
@@ -43,7 +45,6 @@ impl Plugin for PlayerPlugin {
                 .run_in_state(GameState::InGame)
                 .with_system(movement_input)
                 .with_system(lantern_input)
-                .with_system(sprite_animation)
                 .with_system(lantern_direction)
                 .into(),
         );
@@ -71,6 +72,7 @@ fn setup(
             ..default()
         })
         .insert(Name::new("Player"))
+        .insert(Player)
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(GravityScale(0.))
         .insert(RigidBody::Dynamic)
@@ -78,45 +80,11 @@ fn setup(
         .insert(MoveDirection(Vec2::new(0., 0.)))
         .insert(Speed(15.0))
         .insert(LightDirection(Vec2::new(0., 0.)))
-        .insert(AnimationTimer(Timer::from_seconds(0.12, true)))
-        .insert(PlayerAnimations {
-            walk_light: Anim::new(0, 7),
-            walk: Anim::new(8, 15),
-            idle_light: Anim::new(16, 16),
-            idle: Anim::new(17, 17),
-        })
+        .insert(Animations::from_file("player.ron"))
         .insert(Lantern(false))
         .insert(ScreenTextTimer(Timer::from_seconds(5.0, false)))
         .insert(GameOver(false))
         .insert(rendering::OrderedZ);
-}
-
-fn sprite_animation(
-    time: Res<Time>,
-    mut query: Query<(
-        &mut PlayerAnimations,
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-        &MoveDirection,
-        &Lantern,
-    )>,
-) {
-    for (mut anims, mut timer, mut sprite, direction, flashlight) in &mut query {
-        timer.tick(time.delta());
-        if direction.0.length_squared() > 0. {
-            if timer.just_finished() {
-                if flashlight.0 {
-                    sprite.index = anims.walk_light.step();
-                } else {
-                    sprite.index = anims.walk.step();
-                }
-            }
-        } else if flashlight.0 {
-            sprite.index = anims.idle_light.step();
-        } else {
-            sprite.index = anims.idle.step();
-        }
-    }
 }
 
 fn lantern_input(
