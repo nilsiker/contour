@@ -3,7 +3,6 @@ use std::time::Duration;
 use crate::{
     ai::Destination,
     consts::path,
-    game::GameState,
     rendering::{self, animation::Anim, lighting::GlobalLight},
 };
 use bevy::{prelude::*, sprite::Anchor};
@@ -35,16 +34,6 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
-            .add_system_set(
-                SystemSet::on_update(GameState::InGame)
-                    .with_system(spawn_enemies)
-                    .with_system(hide_in_light)
-                    .with_system(make_dangerous),
-            )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::on_update(GameState::InGame).with_system(merge),
-            )
             .add_system(set_move_to_destination)
             .add_system(sprite_animation);
     }
