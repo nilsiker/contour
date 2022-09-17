@@ -8,17 +8,12 @@ use self::{
 pub mod enemy;
 pub mod player;
 
-pub struct ContourPawnPlugins;
-impl PluginGroup for ContourPawnPlugins {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group.add(PawnPlugin).add(PlayerPlugin).add(EnemyPlugin);
-    }
-}
-
-struct PawnPlugin;
+pub struct PawnPlugin;
 impl Plugin for PawnPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(character_movement)
+        app.add_plugin(PlayerPlugin)
+            .add_plugin(EnemyPlugin)
+            .add_system(character_movement)
             .add_system(sprite_flipping);
     }
 }

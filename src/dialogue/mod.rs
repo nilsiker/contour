@@ -1,4 +1,5 @@
-use bevy::prelude::*;
+#![allow(dead_code, unused_variables)]
+use bevy::{ prelude::*};
 
 use self::ui::DialogueUiPlugin;
 mod ui;
@@ -7,7 +8,7 @@ pub struct DialoguePlugin;
 impl Plugin for DialoguePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DialogueChangeEvent>()
-        .insert_resource(DialogueNode::Line(DialogueData {
+        .insert_resource(DialogueNode::Line(DialogueData {  // TODO add None when done debugging here
             text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent tincidunt congue quam, sed suscipit leo bibendum et. Mauris convallis varius tortor, sed vestibulum ligula efficitur a. Proin dignissim lectus nec dui rutrum, non varius nisl tincidunt. Aliquam justo dolor, consectetur eget feugiat ac, porta ut sem. Vivamus convallis ac nisl in ornare.".into(),
             progress: 0,
             event: None,
@@ -24,10 +25,10 @@ fn handle_dialogue_change_events(
     mut dialogue: ResMut<DialogueNode>,
     mut events: EventReader<DialogueChangeEvent>,
 ) {
-    for event in events.iter() {
+    events.iter().for_each(|event| {
         *dialogue = event.0.clone(); // TODO verify that this clone is necessary and without side effects
         bevy::log::info!("dialogue changed");
-    }
+    })
 }
 
 #[derive(Clone)]

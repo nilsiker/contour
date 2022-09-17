@@ -31,32 +31,6 @@ impl Plugin for DialogueUiPlugin {
         .add_system(step_through_dialogue);
     }
 }
-trait Estate {
-    fn living_area(&self) -> f32;
-    fn rent(&self) -> f32;
-    fn not_a_method_just_a_function(value: f32) -> f32;
-}
-
-struct Villa;
-impl Estate for Villa {
-    fn living_area(&self) -> f32 {
-        200.0
-    }
-
-    fn rent(&self) -> f32 {
-        2000.0
-    }
-
-    fn not_a_method_just_a_function(value: f32) -> f32 {
-        value * 2.0
-    }
-}
-
-fn get_cost_per_sqm<T: Estate>(estate: T) -> f32 {
-    let value = estate.living_area() / estate.rent();
-
-    T::not_a_method_just_a_function(value)
-}
 
 struct DialogueTextTimer(Timer);
 

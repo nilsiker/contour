@@ -10,6 +10,7 @@ mod game;
 mod pawn;
 mod rendering;
 pub mod ui;
+pub mod state;
 
 use audio::ContourAudioPlugins;
 #[cfg(debug_assertions)]
@@ -21,12 +22,14 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::render::RapierDebugRenderPlugin;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
+use iyes_loopless::prelude::*;
+
 use bevy_kira_audio::AudioPlugin;
 use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use config::ConfigPlugin;
 use dialogue::DialoguePlugin;
-use game::GameState;
-use pawn::ContourPawnPlugins;
+use game::{GameState, WorldState};
+use pawn::PawnPlugin;
 use rendering::ContourRenderingPlugins;
 use ui::ContourUiPlugins;
 
@@ -51,11 +54,11 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(EguiPlugin)
         // Game specific
+        .add_state(WorldState::Unpaused)
         .add_state(GameState::Prelude)
-        .add_state_to_stage(CoreStage::PostUpdate, GameState::Prelude)
         .add_plugin(ConfigPlugin)
         .add_plugins(ContourRenderingPlugins)
-        .add_plugins(ContourPawnPlugins)
+        .add_plugin(PawnPlugin)
         .add_plugins(ContourAudioPlugins)
         .add_plugins(ContourUiPlugins)
         .add_plugin(DialoguePlugin);

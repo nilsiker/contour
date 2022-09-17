@@ -1,10 +1,12 @@
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
+use iyes_loopless::prelude::*;
 
 use crate::{
     consts::path,
-    game::GameState,
+    game::WorldState,
     rendering::{self, animation::Anim, lighting::GlobalLight},
+    state::paused,
 };
 
 use super::{enemy::Enemy, AnimationTimer, GameOver, MoveDirection, Speed};
@@ -38,11 +40,11 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
             .add_system_set(
-                SystemSet::on_update(GameState::InGame)
+                SystemSet::on_update(WorldState::Unpaused)
                     .with_system(movement_input)
                     .with_system(lantern_direction),
             )
-            .add_system(sprite_animation)
+            .add_system(sprite_animation.run_if_not(paused))
             .add_system(lantern_toggle)
             .add_system(lantern_extinguisher);
     }
@@ -91,7 +93,6 @@ fn setup(
 
 fn sprite_animation(
     time: Res<Time>,
-    state: Res<State<GameState>>,
     mut query: Query<(
         &mut PlayerAnimations,
         &mut AnimationTimer,
@@ -101,44 +102,33 @@ fn sprite_animation(
     )>,
 ) {
     for (mut anims, mut timer, mut sprite, direction, flashlight) in &mut query {
-        match state.current() {
-            GameState::_GameOver => sprite.index = anims.idle.step(),
-            _ => {
-                timer.tick(time.delta());
-                if direction.0.length_squared() > 0. {
-                    if timer.just_finished() {
-                        if flashlight.0 {
-                            sprite.index = anims.walk_light.step();
-                        } else {
-                            sprite.index = anims.walk.step();
-                        }
-                    }
-                } else if flashlight.0 {
-                    sprite.index = anims.idle_light.step();
+        timer.tick(time.delta());
+        if direction.0.length_squared() > 0. {
+            if timer.just_finished() {
+                if flashlight.0 {
+                    sprite.index = anims.walk_light.step();
                 } else {
-                    sprite.index = anims.idle.step();
+                    sprite.index = anims.walk.step();
                 }
             }
+        } else if flashlight.0 {
+            sprite.index = anims.idle_light.step();
+        } else {
+            sprite.index = anims.idle.step();
         }
     }
 }
 
 fn lantern_toggle(
-    state: Res<State<GameState>>,
     input: Res<Input<KeyCode>>,
     mut query: Query<&mut Lantern>,
     light: Query<&GlobalLight>,
 ) {
-    match state.current() {
-        GameState::_GameOver => (),
-        _ => {
-            let light = light.single();
+    let light = light.single();
 
-            if input.just_pressed(KeyCode::F) && !light.0 {
-                for mut lantern in &mut query {
-                    lantern.0 = !lantern.0;
-                }
-            }
+    if input.just_pressed(KeyCode::F) && !light.0 {
+        for mut lantern in &mut query {
+            lantern.0 = !lantern.0;
         }
     }
 }
