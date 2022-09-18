@@ -1,46 +1,23 @@
-use std::path::PathBuf;
-
-use bevy::{prelude::*, sprite::Anchor};
+use bevy::{prelude::*, sprite::Anchor, transform::TransformSystem};
+use bevy_ecs_ldtk::EntityInstance;
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 use iyes_loopless::prelude::*;
 
-use crate::{
-    animation::{Animations, Clip},
-    assets::paths::{self},
-    rendering::{self, lighting::GlobalLight},
-    state::GameState,
-};
+use crate::{animation::Animations, assets::paths, save, state::GameState, rendering};
 
-use super::{enemy::Enemy, GameOver, MoveDirection, Speed};
+use super::{enemy::Enemy, MoveDirection, Speed};
 
 pub struct PlayerPlugin;
 
-#[derive(Component)]
-pub struct Player;
-
-#[derive(Component)]
-pub struct PlayerAnimations {
-    idle: Clip,
-    walk: Clip,
-    idle_light: Clip,
-    walk_light: Clip,
-}
-
-#[derive(Component, Reflect)]
-pub struct ScreenTextTimer(pub Timer);
-
-#[derive(Component)]
-pub struct LightDirection(pub Vec2);
-
-#[derive(Component)]
-pub struct Lantern(pub bool);
-
-#[derive(Component)]
-pub struct LanternTimer(pub Timer);
-
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            spawn_player
+                .run_if_not(save::save_exists)
+                .after(TransformSystem::TransformPropagate),
+        )
+        .add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::InGame)
                 .with_system(movement_input)
@@ -51,50 +28,68 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    let texture_handle = asset_server.load(paths::SPRITE_PLAYER);
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 18, 1);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    let transform = Transform::from_xyz(0., 0., 0.);
+#[derive(Component)]
+pub struct Player;
 
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite {
+#[derive(Component)]
+pub struct LightDirection(pub Vec2);
+
+#[derive(Component)]
+pub struct Lantern(pub bool);
+
+fn spawn_player(
+    mut commands: Commands,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    asset_server: Res<AssetServer>,
+    query: Query<(&GlobalTransform, &EntityInstance)>,
+    player: Query<&Player>, // TODO figure out timing so this does not have to be an on-update system.
+) {
+    if player.is_empty() {
+        bevy::log::info!("Trying to spawn player");
+        if let Some((transform, _)) = query
+            .iter()
+            .filter(|(_, i)| i.identifier == "Player")
+            .nth(0)
+        {
+            let sprite = TextureAtlasSprite {
                 anchor: Anchor::BottomCenter,
                 ..default()
-            },
-            texture_atlas: texture_atlas_handle,
-            transform,
-            ..default()
-        })
-        .insert(Name::new("Player"))
-        .insert(Player)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(GravityScale(0.))
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(2.5))
-        .insert(MoveDirection(Vec2::new(0., 0.)))
-        .insert(Speed(15.0))
-        .insert(LightDirection(Vec2::new(0., 0.)))
-        .insert(Animations::from_file("player.ron"))
-        .insert(Lantern(false))
-        .insert(ScreenTextTimer(Timer::from_seconds(5.0, false)))
-        .insert(GameOver(false))
-        .insert(rendering::OrderedZ);
+            };
+            let texture_handle = asset_server.load(paths::SPRITE_PLAYER);
+            let texture_atlas_base =
+                TextureAtlas::from_grid(texture_handle, Vec2::new(16f32, 16f32), 18, 1);
+            let texture_atlas = texture_atlases.add(texture_atlas_base);
+            let transform = Transform {
+                translation: transform.translation(),
+                ..default()
+            };
+            commands
+                .spawn_bundle(SpriteSheetBundle {
+                    sprite,
+                    texture_atlas,
+                    transform,
+                    ..default()
+                })
+                .insert(Name::new("Player"))
+                .insert(Player)
+                // Physics & Collision
+                .insert(LockedAxes::ROTATION_LOCKED)
+                .insert(GravityScale(0.))
+                .insert(RigidBody::Dynamic)
+                .insert(Collider::ball(2.5))
+                // Movement & Animation
+                .insert(MoveDirection(Vec2::new(0., 0.)))
+                .insert(Speed(50.0))
+                .insert(Animations::from_file("player.ron"))
+                .insert(Lantern(false))
+                .insert(rendering::OrderedZ);
+            bevy::log::info!("Player spawned at {}", transform.translation);
+        }
+    }
 }
 
-fn lantern_input(
-    input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Lantern>,
-    light: Query<&GlobalLight>,
-) {
-    let light = light.single();
-
-    if input.just_pressed(KeyCode::F) && !light.0 {
+fn lantern_input(input: Res<Input<KeyCode>>, mut query: Query<&mut Lantern>) {
+    if input.just_pressed(KeyCode::F) {
         for mut lantern in &mut query {
             lantern.0 = !lantern.0;
         }
@@ -122,19 +117,6 @@ fn lantern_direction(input: Res<Input<KeyCode>>, mut query: Query<&mut LightDire
             }
             vector.0.x = x;
             vector.0.y = y;
-        }
-    }
-}
-
-fn lantern_extinguisher(time: Res<Time>, mut query: Query<(&mut Lantern, &mut LanternTimer)>) {
-    if let Ok((mut lantern, mut timer)) = query.get_single_mut() {
-        if lantern.0 {
-            if timer.0.just_finished() {
-                lantern.0 = false;
-                timer.0.reset();
-            } else {
-                timer.0.tick(time.delta());
-            }
         }
     }
 }

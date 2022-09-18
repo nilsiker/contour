@@ -8,6 +8,7 @@ use crate::config::{ConfigUpdateEvent, VideoSettings};
 use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
 pub mod camera;
 pub mod lighting;
+pub mod layers;
 
 pub struct RenderingPlugin;
 impl Plugin for RenderingPlugin {
@@ -22,7 +23,7 @@ impl Plugin for RenderingPlugin {
             .insert_resource(VSyncSetting(false))
             .add_startup_system(initiate_window_settings)
             .add_system(update_window_settings)
-            .add_system(order_z_entities)
+            // .add_system(order_z_entities)
             .add_plugin(FollowCameraPlugin)
             .add_plugin(LightingPlugin);
     }

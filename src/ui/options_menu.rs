@@ -16,13 +16,13 @@ use super::{
 
 #[derive(Default)]
 pub struct OptionsUiState {
-    pub open: bool,
+    pub show: bool,
 }
 
 pub struct OptionsMenuPlugin;
 impl Plugin for OptionsMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(OptionsUiState { open: true })
+        app.insert_resource(OptionsUiState { show: false })
             .add_system(update);
     }
 }
@@ -43,7 +43,7 @@ fn update(
     let window = windows.get_primary().unwrap();
     let center_pos: Pos2 = (window.width() / 2.0, window.height() / 2.0).into();
     let size: Vec2 = (window.width() / 3.0, window.height() / 2.0).into();
-    if state.open {
+    if state.show {
         egui::Window::new("OptionsMenu")
             .title_bar(false)
             .frame(Frame {
@@ -149,7 +149,7 @@ fn update(
                             audio.bgm = audio_if_revert.bgm;
                             audio.sfx = audio_if_revert.sfx;
 
-                            state.open = false;
+                            state.show = false;
                         }
 
                         // Apply button
@@ -166,6 +166,7 @@ fn update(
                             audio_if_revert.bgm = audio.bgm;
                             audio_if_revert.sfx = audio.sfx;
 
+                            state.show = false;
                             events.send(ConfigUpdateEvent);
                         }
                     })

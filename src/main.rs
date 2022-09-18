@@ -13,6 +13,7 @@ mod rendering;
 pub mod state;
 pub mod ui;
 mod level;
+mod save;
 
 use audio::AudioPlugin;
 #[cfg(debug_assertions)]

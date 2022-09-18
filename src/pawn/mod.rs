@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use self::{
-    enemy::{Enemy, EnemyPlugin},
-    player::PlayerPlugin,
-};
+use self::{enemy::EnemyPlugin, player::PlayerPlugin};
 
 pub mod enemy;
 pub mod player;
@@ -16,9 +13,6 @@ impl Plugin for PawnPlugin {
             .add_system(character_movement);
     }
 }
-
-#[derive(Component)]
-pub struct GameOver(pub bool);
 
 #[derive(Component)]
 pub struct MoveDirection(pub Vec2);
@@ -34,8 +28,5 @@ fn character_movement(
         let move_vector =
             Vec3::new(movement.0.x, movement.0.y, 0.) * time.delta_seconds() * speed.0;
         transform.translation += move_vector;
-        bevy::log::info!("{move_vector}");
     }
 }
-
-
