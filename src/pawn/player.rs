@@ -3,7 +3,7 @@ use bevy_ecs_ldtk::EntityInstance;
 use bevy_rapier2d::prelude::{Collider, GravityScale, LockedAxes, RigidBody};
 use iyes_loopless::prelude::*;
 
-use crate::{animation::Animations, assets::paths, save, state::GameState, rendering};
+use crate::{animation::Animations, assets::paths, rendering, save, state::GameState};
 
 use super::{enemy::Enemy, MoveDirection, Speed};
 
@@ -99,24 +99,14 @@ fn lantern_input(input: Res<Input<KeyCode>>, mut query: Query<&mut Lantern>) {
 fn lantern_direction(input: Res<Input<KeyCode>>, mut query: Query<&mut LightDirection>) {
     for mut vector in &mut query {
         if input.any_pressed([KeyCode::W, KeyCode::S, KeyCode::A, KeyCode::D]) {
-            let mut x = 0f32;
-            let mut y = 0f32;
+            let mut new_direction = Vec2::default();
             if input.any_pressed([KeyCode::A, KeyCode::D]) {
-                x = if input.pressed(KeyCode::A) {
-                    -1f32
-                } else {
-                    1f32
-                };
+                new_direction.x = if input.pressed(KeyCode::A) { -1.0 } else { 1.0 };
             }
             if input.any_pressed([KeyCode::W, KeyCode::S]) {
-                y = if input.pressed(KeyCode::W) {
-                    1f32
-                } else {
-                    -1f32
-                };
+                new_direction.y = if input.pressed(KeyCode::W) { 1.0 } else { -1.0 };
             }
-            vector.0.x = x;
-            vector.0.y = y;
+            vector.0 = new_direction;
         }
     }
 }
