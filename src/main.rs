@@ -7,26 +7,26 @@ mod audio;
 mod config;
 mod dialogue;
 mod game;
+mod ldtk;
 mod paths;
 mod pawn;
 mod rendering;
+mod save;
 pub mod state;
 pub mod ui;
-mod level;
-mod save;
 
 use audio::AudioPlugin;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::RegisterInspectable;
 #[cfg(debug_assertions)]
 use bevy_inspector_egui::WorldInspectorPlugin;
-#[cfg(debug_assertions)]
-use bevy_rapier2d::render::RapierDebugRenderPlugin;
+use heron::prelude::*;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
-use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
 use game::ContourPlugins;
+use rendering::{layers::Layer, YSort};
 
 fn main() {
     let mut app = App::new();
@@ -46,15 +46,17 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
         .add_plugins(DefaultPlugins)
         .add_plugin(AudioPlugin)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(PhysicsPlugin::default())
         .add_plugin(EguiPlugin)
         // Add Contour game plugins
         .add_plugins(ContourPlugins);
 
     #[cfg(debug_assertions)]
     app.add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(WorldInspectorPlugin::default());
+        // .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(WorldInspectorPlugin::default())
+        .register_inspectable::<Layer>()
+        .register_inspectable::<YSort>();
 
     app.run();
 }

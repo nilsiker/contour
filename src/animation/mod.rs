@@ -6,14 +6,14 @@ use serde::Deserialize;
 
 use crate::pawn::{player::Lantern, MoveDirection};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Clip {
     current: usize,
     start: usize,
     end: usize,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Animations {
     clips: HashMap<String, Clip>,
 }

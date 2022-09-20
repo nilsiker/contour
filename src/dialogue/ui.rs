@@ -84,43 +84,44 @@ fn show_dialogue(
     mut dialogue: ResMut<DialogueNode>,
     windows: Res<Windows>,
 ) {
-    let window = windows.get_primary().unwrap();
-    let center: Pos2 = (
-        window.width() / 2.0 - INNER_MARGIN_X,
-        window.height() - (DIALOGUE_HEIGHT / 2.0),
-    )
-        .into();
-    let size: Vec2 = (window.width() - (2.0 * INNER_MARGIN_X), DIALOGUE_HEIGHT).into();
-    match dialogue.as_mut() {
-        DialogueNode::Line(data) => {
-            bevy_egui::egui::Window::new("DialogueWindow")
-                .title_bar(false)
-                .fixed_rect(Rect::from_center_size(center, size))
-                .frame(Frame {
-                    inner_margin: Margin::symmetric(INNER_MARGIN_X, INNER_MARGIN_Y),
-                    rounding: Rounding::same(0.0),
-                    fill: MENU_FILL,
-                    shadow: Shadow {
-                        extrusion: 30.0,
-                        color: Color32::BLACK,
-                    },
-                    ..default()
-                })
-                .show(egui.ctx_mut(), |ui| {
-                    ui.horizontal_centered(|ui| {
-                        ui.vertical(|ui| {
-                            let sliced_text = &data.text[..data.progress];
-                            ui.label(h2(sliced_text));
+    if let Some(window) = windows.get_primary() {
+        let center: Pos2 = (
+            window.width() / 2.0 - INNER_MARGIN_X,
+            window.height() - (DIALOGUE_HEIGHT / 2.0),
+        )
+            .into();
+        let size: Vec2 = (window.width() - (2.0 * INNER_MARGIN_X), DIALOGUE_HEIGHT).into();
+        match dialogue.as_mut() {
+            DialogueNode::Line(data) => {
+                bevy_egui::egui::Window::new("DialogueWindow")
+                    .title_bar(false)
+                    .fixed_rect(Rect::from_center_size(center, size))
+                    .frame(Frame {
+                        inner_margin: Margin::symmetric(INNER_MARGIN_X, INNER_MARGIN_Y),
+                        rounding: Rounding::same(0.0),
+                        fill: MENU_FILL,
+                        shadow: Shadow {
+                            extrusion: 30.0,
+                            color: Color32::BLACK,
+                        },
+                        ..default()
+                    })
+                    .show(egui.ctx_mut(), |ui| {
+                        ui.horizontal_centered(|ui| {
+                            ui.vertical(|ui| {
+                                let sliced_text = &data.text[..data.progress];
+                                ui.label(h2(sliced_text));
+                            });
                         });
+                        ui.allocate_space(ui.available_size());
                     });
-                    ui.allocate_space(ui.available_size());
-                });
+            }
+            DialogueNode::Choice(_) => {
+                bevy::log::warn!(
+                    "And here you would be presented with a few choices, IF I HAD IMPLEMENTED IT!"
+                )
+            }
+            _ => (),
         }
-        DialogueNode::Choice(_) => {
-            bevy::log::warn!(
-                "And here you would be presented with a few choices, IF I HAD IMPLEMENTED IT!"
-            )
-        }
-        _ => (),
     }
 }

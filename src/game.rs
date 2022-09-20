@@ -2,7 +2,8 @@ use bevy::prelude::PluginGroup;
 
 use crate::{
     animation::AnimPlugin, audio::AudioPlugin, config::ConfigPlugin, dialogue::DialoguePlugin,
-    pawn::PawnPlugin, rendering::RenderingPlugin, state::StatePlugin, ui::UiPlugin, level::LevelPlugin,
+    ldtk::LdtkPlugin, pawn::PawnPlugin, rendering::RenderingPlugin, state::StatePlugin,
+    ui::UiPlugin,
 };
 
 pub struct ContourPlugins;
@@ -17,6 +18,6 @@ impl PluginGroup for ContourPlugins {
             .add(UiPlugin)
             .add(DialoguePlugin)
             .add(AnimPlugin)
-            .add(LevelPlugin);
+            .add(LdtkPlugin);
     }
 }

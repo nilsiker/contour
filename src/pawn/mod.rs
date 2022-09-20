@@ -14,11 +14,11 @@ impl Plugin for PawnPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct MoveDirection(pub Vec2);
 
-#[derive(Component)]
-struct Speed(f32);
+#[derive(Component, Clone)]
+pub struct Speed(pub f32);
 
 fn character_movement(
     time: Res<Time>,

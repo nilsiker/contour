@@ -1,14 +1,15 @@
+use crate::config::{ConfigUpdateEvent, VideoSettings};
 use bevy::{
     prelude::*,
+    transform::TransformSystem,
     window::{PresentMode, WindowMode},
 };
+use bevy_inspector_egui::Inspectable;
 
-use crate::config::{ConfigUpdateEvent, VideoSettings};
-
-use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
+use self::{camera::FollowCameraPlugin, layers::Layer, lighting::LightingPlugin};
 pub mod camera;
-pub mod lighting;
 pub mod layers;
+pub mod lighting;
 
 pub struct RenderingPlugin;
 impl Plugin for RenderingPlugin {
@@ -23,7 +24,10 @@ impl Plugin for RenderingPlugin {
             .insert_resource(VSyncSetting(false))
             .add_startup_system(initiate_window_settings)
             .add_system(update_window_settings)
-            // .add_system(order_z_entities)
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                order_z_entities.after(TransformSystem::TransformPropagate),
+            )
             .add_plugin(FollowCameraPlugin)
             .add_plugin(LightingPlugin);
     }
@@ -37,9 +41,15 @@ fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettin
     update_window_helper(window, &video);
 }
 
-fn order_z_entities(mut query: Query<&mut Transform, With<OrderedZ>>) {
-    for mut transform in &mut query {
-        transform.translation.z = -transform.translation.y;
+fn order_z_entities(
+    mut query: Query<(&mut Transform, &GlobalTransform, Option<&Layer>), With<YSort>>,
+) {
+    for (mut transform, global, layer) in &mut query {
+        transform.translation.z = -global.translation().y
+            + match layer {
+                Some(layer) => layer.0,
+                None => 0.0,
+            };
     }
 }
 
@@ -70,8 +80,8 @@ fn update_window_helper(window: &mut Window, video: &Res<VideoSettings>) {
     window.set_resolution(video.resolution.0, video.resolution.1);
 }
 
-#[derive(Component)]
-pub struct OrderedZ;
+#[derive(Component, Inspectable, Clone, Default)]
+pub struct YSort;
 
 pub struct ResolutionSetting((f32, f32));
 
