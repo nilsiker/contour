@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{prelude::*, Audio};
 
-use crate::{config::AudioSettings, assets::paths::AUDIO_BGM};
+use crate::{assets::paths::AUDIO_BGM, config::AudioSettings};
 
 pub struct BgmVolumeChangedEvent;
 

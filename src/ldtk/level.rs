@@ -1,15 +1,9 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_ecs_ldtk::prelude::*;
 use bevy_ecs_tilemap::tiles::TilePos;
-use heron::prelude::*;
 use iyes_loopless::state::NextState;
 
-use crate::{
-    rendering::layers::{ABOVE_LAYER, GROUND_LAYER},
-    state::GameState,
-};
-
-use super::ColliderBundle;
+use crate::state::GameState;
 
 pub struct LevelPlugin;
 impl Plugin for LevelPlugin {
@@ -27,8 +21,7 @@ impl Plugin for LevelPlugin {
             .insert_resource(LevelSelection::Index(0))
             .add_system(add_name_on_ldtk_layers)
             .add_system(add_name_on_ldtk_tiles)
-            .add_system(add_name_on_ldtk_levels)
-            .add_system(initialize_layers_z);
+            .add_system(add_name_on_ldtk_levels);
     }
 }
 
@@ -85,14 +78,4 @@ fn add_name_on_ldtk_tiles(
             None => (),
         }
     })
-}
-
-fn initialize_layers_z(mut tilemaps: Query<(&mut Transform, &Name), Added<Name>>) {
-    for (mut transform, name) in &mut tilemaps {
-        match name.as_str() {
-            "Ground" => transform.translation.z = GROUND_LAYER,
-            "Above" => transform.translation.z = ABOVE_LAYER,
-            _ => transform.translation.z = 0.0,
-        };
-    }
 }

@@ -1,6 +1,5 @@
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_ecs_ldtk::prelude::*;
-use heron::prelude::*;
 
 use crate::{
     animation::Animations,
@@ -9,10 +8,7 @@ use crate::{
         player::{Lantern, Player},
         MoveDirection, Speed,
     },
-    rendering::{
-        layers::{Layer, PAWN_LAYER},
-        YSort,
-    },
+    rendering::YSort,
 };
 
 use super::ColliderBundle;
@@ -40,7 +36,6 @@ struct Player2 {
     pub collider_bundle: ColliderBundle,
     name: Name,
     y_sort: YSort,
-    layer: Layer,
     player: Player,
     move_direction: MoveDirection,
     speed: Speed,
@@ -49,7 +44,7 @@ struct Player2 {
 }
 impl LdtkEntity for Player2 {
     fn bundle_entity(
-        _: &EntityInstance,
+        entity: &EntityInstance,
         _: &LayerInstance,
         _: Option<&Handle<Image>>,
         _: Option<&TilesetDefinition>,
@@ -71,24 +66,13 @@ impl LdtkEntity for Player2 {
                 texture_atlas,
                 ..default()
             },
-            collider_bundle: ColliderBundle {
-                collider: CollisionShape::Sphere { radius: 4.0 },
-                rigid_body: RigidBody::Dynamic,
-                rotation_constraints: RotationConstraints::lock(),
-                physic_material: PhysicMaterial {   // TODO  this hardly works, include some drag-system...
-                    restitution: 0.0,
-                    density: 50.0,
-                    friction: 1.0,
-                },
-                ..default()
-            },
+            collider_bundle: ColliderBundle::from(entity.clone()),
             name: "Player".into(),
-            y_sort: YSort,
-            layer: Layer(PAWN_LAYER),
             speed: Speed(20.0),
-            player: Player,
-            move_direction: MoveDirection(Vec2::default()),
             animations: Animations::from_file("player.ron"),
+            move_direction: MoveDirection(Vec2::default()),
+            player: Player,
+            y_sort: YSort::default(),
             lantern: Lantern(false),
         }
     }
@@ -103,6 +87,5 @@ struct Crate {
     #[bundle]
     pub collider_bundle: ColliderBundle, // TODO allow for an offset  child with transform, and collider attached...?
     y_sort: YSort,
-    layer: Layer,
     name: Name,
 }

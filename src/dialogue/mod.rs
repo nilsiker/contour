@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-use bevy::{ prelude::*};
+use bevy::prelude::*;
 
 use self::ui::DialogueUiPlugin;
 mod ui;

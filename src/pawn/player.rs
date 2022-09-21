@@ -10,15 +10,14 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                ConditionSet::new()
-                    .run_in_state(GameState::InGame)
-                    .with_system(movement_input)
-                    .with_system(lantern_input)
-                    .with_system(lantern_direction)
-                    .into(),
-            );
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(GameState::InGame)
+                .with_system(movement_input)
+                .with_system(lantern_input)
+                .with_system(lantern_direction)
+                .into(),
+        );
     }
 }
 

@@ -26,7 +26,7 @@ use heron::prelude::*;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
 use game::ContourPlugins;
-use rendering::{layers::Layer, YSort};
+use rendering::YSort;
 
 fn main() {
     let mut app = App::new();
@@ -55,7 +55,6 @@ fn main() {
     app.add_plugin(FrameTimeDiagnosticsPlugin)
         // .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(WorldInspectorPlugin::default())
-        .register_inspectable::<Layer>()
         .register_inspectable::<YSort>();
 
     app.run();

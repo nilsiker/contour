@@ -25,11 +25,11 @@ impl Plugin for FollowCameraPlugin {
 fn setup(mut commands: Commands) {
     commands.spawn_bundle({
         let mut camera = Camera2dBundle::default();
-        camera.transform.translation.z = f32::MIN + 0.1;
+
         camera.projection.scaling_mode = ScalingMode::WindowSize;
         camera.projection.scale = 0.15;
-        camera.projection.near = f32::MIN;
-        camera.projection.far = f32::MAX;
+        // camera.projection.near = CAMERA_NEAR_PLANE;
+        // camera.projection.far = CAMERA_FAR_PLANE;
         camera
     });
 }

@@ -6,9 +6,8 @@ use bevy::{
 };
 use bevy_inspector_egui::Inspectable;
 
-use self::{camera::FollowCameraPlugin, layers::Layer, lighting::LightingPlugin};
+use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
 pub mod camera;
-pub mod layers;
 pub mod lighting;
 
 pub struct RenderingPlugin;
@@ -33,6 +32,20 @@ impl Plugin for RenderingPlugin {
     }
 }
 
+pub const PAWN_LAYER: f32 = 2.0;
+
+#[derive(Component, Inspectable, Clone)]
+pub struct YSort(pub f32);
+impl Default for YSort {
+    fn default() -> Self {
+        Self(PAWN_LAYER)
+    }
+}
+
+pub struct ResolutionSetting((f32, f32));
+
+pub struct VSyncSetting(bool);
+
 fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettings>) {
     let window = windows
         .get_primary_mut()
@@ -41,15 +54,10 @@ fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettin
     update_window_helper(window, &video);
 }
 
-fn order_z_entities(
-    mut query: Query<(&mut Transform, &GlobalTransform, Option<&Layer>), With<YSort>>,
-) {
-    for (mut transform, global, layer) in &mut query {
-        transform.translation.z = -global.translation().y
-            + match layer {
-                Some(layer) => layer.0,
-                None => 0.0,
-            };
+fn order_z_entities(mut query: Query<(&mut Transform, &GlobalTransform, &YSort)>) {
+    for (mut transform, global, ysort) in &mut query {
+        transform.translation.z =
+            ysort.0 - (1.0f32 / (1.0f32 + (2.0f32.powf(-0.00001 * global.translation().y))));
     }
 }
 
@@ -79,10 +87,3 @@ fn update_window_helper(window: &mut Window, video: &Res<VideoSettings>) {
 
     window.set_resolution(video.resolution.0, video.resolution.1);
 }
-
-#[derive(Component, Inspectable, Clone, Default)]
-pub struct YSort;
-
-pub struct ResolutionSetting((f32, f32));
-
-pub struct VSyncSetting(bool);
