@@ -8,9 +8,9 @@ mod config;
 mod dialogue;
 mod game;
 mod ldtk;
-mod paths;
 mod pawn;
-mod rendering;
+pub mod physics;
+pub mod rendering;
 mod save;
 pub mod state;
 pub mod ui;
@@ -26,6 +26,8 @@ use heron::prelude::*;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
 use game::ContourPlugins;
+use ldtk::entities::SpriteOffset;
+use physics::Drag;
 use rendering::YSort;
 
 fn main() {
@@ -43,7 +45,11 @@ fn main() {
             resizable: false,
             ..default()
         })
-        .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
+        .insert_resource(ClearColor(Color::rgb(
+            0x16 as f32 / 255.0,
+            0x16 as f32 / 255.0,
+            0x1D as f32 / 255.0,
+        )))
         .add_plugins(DefaultPlugins)
         .add_plugin(AudioPlugin)
         .add_plugin(PhysicsPlugin::default())
@@ -55,7 +61,9 @@ fn main() {
     app.add_plugin(FrameTimeDiagnosticsPlugin)
         // .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(WorldInspectorPlugin::default())
-        .register_inspectable::<YSort>();
+        .register_inspectable::<YSort>()
+        .register_inspectable::<Drag>()
+        .register_inspectable::<SpriteOffset>();
 
     app.run();
 }

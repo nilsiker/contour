@@ -7,12 +7,20 @@ mod ui;
 pub struct DialoguePlugin;
 impl Plugin for DialoguePlugin {
     fn build(&self, app: &mut App) {
+
+        let next_line =  DialogueNode::Line(DialogueData {  // TODO add None when done debugging here
+            text: "And here comes the next line".into(),
+            progress: 0,
+            event: None,
+            next: Box::new(DialogueNode::None),
+        });
+
         app.add_event::<DialogueChangeEvent>()
         .insert_resource(DialogueNode::Line(DialogueData {  // TODO add None when done debugging here
             text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent tincidunt congue quam, sed suscipit leo bibendum et. Mauris convallis varius tortor, sed vestibulum ligula efficitur a. Proin dignissim lectus nec dui rutrum, non varius nisl tincidunt. Aliquam justo dolor, consectetur eget feugiat ac, porta ut sem. Vivamus convallis ac nisl in ornare.".into(),
             progress: 0,
             event: None,
-            next: Box::new(DialogueNode::None),
+            next: Box::new(next_line)
         }))
         .add_system(handle_dialogue_change_events)
         .add_plugin(DialogueUiPlugin);

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use heron::prelude::*;
 
-use super::ColliderBundle;
+use super::PhysicsBundle;
 
 pub struct IntGridCellPlugin;
 impl Plugin for IntGridCellPlugin {
@@ -19,17 +19,17 @@ struct WallBundle {
     wall: Wall,
     #[from_int_grid_cell]
     #[bundle]
-    pub collider_bundle: ColliderBundle,
+    pub collider_bundle: PhysicsBundle,
 }
 
-impl From<IntGridCell> for ColliderBundle {
-    fn from(int_grid_cell: IntGridCell) -> ColliderBundle {
+impl From<IntGridCell> for PhysicsBundle {
+    fn from(int_grid_cell: IntGridCell) -> PhysicsBundle {
         let rotation_constraints = RotationConstraints::lock();
-
+        
         if int_grid_cell.value == 1 {
-            ColliderBundle {
+            PhysicsBundle {
                 collider: CollisionShape::Cuboid {
-                    half_extends: Vec3::new(8., 8., 0.),
+                    half_extends: Vec3::new(4., 4., 0.),
                     border_radius: None,
                 },
                 rotation_constraints,
@@ -37,7 +37,7 @@ impl From<IntGridCell> for ColliderBundle {
                 ..Default::default()
             }
         } else {
-            ColliderBundle::default()
+            PhysicsBundle::default()
         }
     }
 }

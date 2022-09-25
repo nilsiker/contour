@@ -10,6 +10,7 @@ strum = "0.24"
 strum_macros = "0.24"
 bevy = { version = "^0.8" }
 bevy_egui = "^0.16.0"
+bevy_easings = "^0.8.1"
 bevy-inspector-egui = "^0.13.0"
 heron = { version = "^4.0.1", features = ["2d"] }
 bevy_ecs_ldtk = { version = "^0.4.0", features = ["derive"] }
@@ -19,6 +20,9 @@ iyes_loopless = "^0.7.1"
 rand = "^0.8.5"
 serde = "^1.0.144"
 ron = "^0.8.0"
+
+[features]
+debug = ["heron/debug-2d"]
 
 [patch.crates-io]
 wgpu = { git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround" }

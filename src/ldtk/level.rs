@@ -12,7 +12,7 @@ impl Plugin for LevelPlugin {
             .add_startup_system(setup)
             .insert_resource(LdtkSettings {
                 level_spawn_behavior: LevelSpawnBehavior::UseWorldTranslation {
-                    load_level_neighbors: true,
+                    load_level_neighbors: false,
                 },
                 int_grid_rendering: IntGridRendering::Invisible,
                 level_background: LevelBackground::Nonexistent,
@@ -29,10 +29,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     asset_server.watch_for_changes().unwrap();
     commands
         .spawn_bundle(LdtkWorldBundle {
-            ldtk_handle: asset_server.load("levels/typical.ldtk"),
+            ldtk_handle: asset_server.load("levels/contour.ldtk"),
             ..Default::default()
         })
-        .insert(Name::new("LDtk World"));
+        .insert(Name::new("World"));
     bevy::log::info!("Map loaded.");
 
     commands.insert_resource(NextState(GameState::InGame));

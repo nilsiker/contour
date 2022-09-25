@@ -1,4 +1,7 @@
 use bevy::prelude::*;
+use bevy_ecs_ldtk::{prelude::FieldValue, EntityInstance};
+
+use crate::ldtk::utils::FieldReturner;
 
 use self::{enemy::EnemyPlugin, player::PlayerPlugin};
 
@@ -14,11 +17,29 @@ impl Plugin for PawnPlugin {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Default)]
 pub struct MoveDirection(pub Vec2);
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Default)]
 pub struct Speed(pub f32);
+impl From<EntityInstance> for Speed {
+    fn from(entity: EntityInstance) -> Self {
+        match entity.get_field_value("speed") {
+            Some(speed) => {
+                if let FieldValue::Float(speed) = speed {
+                    if let Some(speed) = speed {
+                        Self(speed)
+                    } else {
+                        Self::default()
+                    }
+                } else {
+                    Self::default()
+                }
+            }
+            None => Self::default(),
+        }
+    }
+}
 
 fn character_movement(
     time: Res<Time>,

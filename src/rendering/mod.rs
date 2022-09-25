@@ -1,3 +1,6 @@
+mod camera;
+mod lighting;
+
 use crate::config::{ConfigUpdateEvent, VideoSettings};
 use bevy::{
     prelude::*,
@@ -7,8 +10,8 @@ use bevy::{
 use bevy_inspector_egui::Inspectable;
 
 use self::{camera::FollowCameraPlugin, lighting::LightingPlugin};
-pub mod camera;
-pub mod lighting;
+
+pub const PAWN_LAYER: f32 = 3.0;
 
 pub struct RenderingPlugin;
 impl Plugin for RenderingPlugin {
@@ -32,8 +35,6 @@ impl Plugin for RenderingPlugin {
     }
 }
 
-pub const PAWN_LAYER: f32 = 2.0;
-
 #[derive(Component, Inspectable, Clone)]
 pub struct YSort(pub f32);
 impl Default for YSort {
@@ -51,6 +52,7 @@ fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettin
         .get_primary_mut()
         .expect("primary window not loaded");
 
+    window.set_cursor_icon(CursorIcon::Hand);
     update_window_helper(window, &video);
 }
 
