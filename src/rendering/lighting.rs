@@ -8,7 +8,6 @@ pub enum Time {
 }
 
 pub struct LightingPlugin;
-
 impl Plugin for LightingPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Time::Day)

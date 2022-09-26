@@ -11,7 +11,7 @@ use self::{
 
 pub mod entities;
 mod int_grid_cells;
-mod level;
+pub mod level;
 pub mod utils;
 
 pub struct LdtkPlugin;
@@ -58,7 +58,7 @@ impl From<EntityInstance> for PhysicsBundle {
                 rotation_constraints,
                 ..default()
             },
-            "LevelGate" => PhysicsBundle {
+            "Gate" => PhysicsBundle {
                 collider: CollisionShape::Cuboid {
                     half_extends: (2.0, 2.0, 0.0).into(),
                     border_radius: None,

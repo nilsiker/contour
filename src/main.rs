@@ -26,7 +26,7 @@ use heron::prelude::*;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
 use game::ContourPlugins;
-use ldtk::entities::SpriteOffset;
+use ldtk::{entities::SpriteOffset, level::Gate};
 use physics::Drag;
 use rendering::YSort;
 
@@ -63,6 +63,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::default())
         .register_inspectable::<YSort>()
         .register_inspectable::<Drag>()
+        .register_inspectable::<Gate>()
         .register_inspectable::<SpriteOffset>();
 
     app.run();

@@ -19,8 +19,10 @@ pub enum GameState {
     UI,
 }
 
-fn debug_game_state_change(state: Res<CurrentState<GameState>>) {
-    if state.is_changed() {
-        bevy::log::info!("game state changed: {:?}", state.0)
+fn debug_game_state_change(
+    game_state: Res<CurrentState<GameState>>,
+) {
+    if game_state.is_changed() {
+        bevy::log::info!("GameState changed: {:?}", game_state.0)
     }
 }

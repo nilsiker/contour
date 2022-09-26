@@ -12,7 +12,8 @@
                 "args": [
                     "build",
                     "--bin=contour",
-                    "--package=contour"
+                    "--package=contour",
+                    "--features=debug"
                 ],
                 "filter": {
                     "name": "contour",

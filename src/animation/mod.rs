@@ -15,6 +15,7 @@ pub struct Clip {
 
 #[derive(Component, Clone)]
 pub struct Animations {
+    pub active: bool,
     clips: HashMap<String, Clip>,
 }
 impl Animations {
@@ -23,10 +24,12 @@ impl Animations {
         let path = work_dir.join("assets/animations").join(filename);
         let file = std::fs::read(path).expect("valid anim ron file");
 
+        let active = true;
         let clips: HashMap<String, Clip> =
             ron::de::from_bytes(&file[..]).expect("deserialization of anim ron file");
 
-        Animations { clips }
+
+        Animations { active, clips }
     }
 }
 

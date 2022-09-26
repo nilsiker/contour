@@ -1,7 +1,6 @@
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_ecs_ldtk::prelude::*;
 use bevy_inspector_egui::Inspectable;
-use heron::CollisionEvent;
 
 use crate::{
     animation::Animations,
@@ -21,10 +20,8 @@ impl Plugin for EntitiesPlugin {
         app.register_ldtk_entity::<ContainerBundle>("Container")
             .register_ldtk_entity::<PlayerBundle>("Player")
             .register_ldtk_entity::<InfoBundle>("Info")
-            .register_ldtk_entity::<LevelGateBundle>("LevelGate")
             .add_system(set_entity_names)
-            .add_system(set_sprite_anchor)
-            .add_system(register_level_gate_collisions);
+            .add_system(set_sprite_anchor);
     }
 }
 
@@ -119,36 +116,6 @@ struct ContainerBundle {
     name: Name,
 }
 
-#[derive(Component, Default)]
-pub struct LevelGate(usize);
-impl From<EntityInstance> for LevelGate {
-    fn from(entity: EntityInstance) -> Self {
-        Self(match entity.get_field_value("Level") {
-            Some(field_value) => {
-                if let FieldValue::Int(option) = field_value {
-                    if let Some(level_index) = option {
-                        level_index as usize
-                    } else {
-                        0
-                    }
-                } else {
-                    0
-                }
-            }
-            None => 0,
-        })
-    }
-}
-
-#[derive(Bundle, LdtkEntity)]
-struct LevelGateBundle {
-    #[from_entity_instance]
-    level_index: LevelGate,
-    #[from_entity_instance]
-    #[bundle]
-    pub physics_bundle: PhysicsBundle,
-}
-
 #[derive(Bundle, LdtkEntity)]
 struct InfoBundle {
     #[from_entity_instance]
@@ -231,30 +198,3 @@ fn set_sprite_anchor(
     }
 }
 
-fn register_level_gate_collisions(
-    mut players: Query<Entity, With<Player>>,
-    mut gates: Query<(Entity, &LevelGate)>,
-    mut current_level: ResMut<LevelSelection>,
-    mut events: EventReader<CollisionEvent>,
-) {
-    for event in events.iter() {
-        if let CollisionEvent::Started(data1, data2) = event {
-            if let Ok(_) = players.get_single_mut() {
-                let mut gates = gates.iter_mut().filter(|(g, _)| {
-                    g == &data1.rigid_body_entity() || g == &data2.rigid_body_entity()
-                });
-
-                if let Some((_, gate)) = gates.next() {
-                    match *current_level {
-                        LevelSelection::Index(index) => {
-                            if index != gate.0 {
-                                *current_level = LevelSelection::Index(gate.0);
-                            }
-                        }
-                        _ => (),
-                    }
-                }
-            }
-        }
-    }
-}

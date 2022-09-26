@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-use bevy_ecs_ldtk::LevelSelection;
 use iyes_loopless::prelude::*;
 
-use crate::state::GameState;
+use crate::animation::Animations;
 
 use super::{enemy::Enemy, MoveDirection};
 
@@ -11,20 +10,37 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(PlayerHiddenOnLevelChangeTimer(Timer::from_seconds(
-            0.25, false,
-        )))
-        .add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::InGame)
-                .with_system(movement_input)
-                .with_system(lantern_input)
-                .with_system(lantern_direction)
-                .with_system(hide_player_on_level_load)
-                .with_system(show_player_after_level_load)
-                .into(),
-        );
+        app.add_system(movement_input)
+            .add_loopless_state(PlayerState::Unpaused)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(PlayerState::Unpaused)
+                    .with_system(lantern_input)
+                    .with_system(lantern_direction)
+                    .into(),
+            )
+            .add_system(component_status_on_state_change);
     }
+}
+
+fn component_status_on_state_change(
+    mut query: Query<&mut Animations, With<Player>>,
+    state: Res<CurrentState<PlayerState>>,
+) {
+    if state.is_changed() {
+        for mut animation in &mut query {
+            animation.active = match state.0 {
+                PlayerState::Paused => false,
+                PlayerState::Unpaused => true,
+            };
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub enum PlayerState {
+    Paused,
+    Unpaused,
 }
 
 #[derive(Component, Clone)]
@@ -93,37 +109,5 @@ fn movement_input(
             vector.0.y = y;
             vector.0 = vector.0.normalize_or_zero();
         }
-    }
-}
-struct PlayerHiddenOnLevelChangeTimer(Timer);
-
-fn hide_player_on_level_load(
-    mut query: Query<&mut Visibility, With<Player>>,
-    mut timer: ResMut<PlayerHiddenOnLevelChangeTimer>,
-    level: Res<LevelSelection>,
-) {
-    if level.is_changed() {
-        if let Ok(mut visibility) = query.get_single_mut() {
-            bevy::log::info!("level changed, hiding player");
-            visibility.is_visible = false;
-            timer.0.unpause();
-        }
-    }
-}
-
-fn show_player_after_level_load(
-    mut query: Query<&mut Visibility, With<Player>>,
-    mut timer: ResMut<PlayerHiddenOnLevelChangeTimer>,
-    time: Res<Time>,
-) {
-    if timer.0.just_finished() {
-        if let Ok(mut visibility) = query.get_single_mut() {
-            bevy::log::info!("timer finished, show player");
-            visibility.is_visible = true;
-            timer.0.pause();
-            timer.0.reset();
-        }
-    } else {
-        timer.0.tick(time.delta());
     }
 }

@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::{prelude::FieldValue, EntityInstance};
+use iyes_loopless::prelude::IntoConditionalSystem;
 
-use crate::ldtk::utils::FieldReturner;
+use crate::{ldtk::utils::FieldReturner, state::GameState};
 
 use self::{enemy::EnemyPlugin, player::PlayerPlugin};
 
@@ -13,7 +14,7 @@ impl Plugin for PawnPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(PlayerPlugin)
             .add_plugin(EnemyPlugin)
-            .add_system(character_movement);
+            .add_system(character_movement.run_in_state(GameState::InGame));
     }
 }
 
