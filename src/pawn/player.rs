@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use iyes_loopless::prelude::*;
 
-use crate::animation::Animations;
+use crate::{animation::Animations, state::GameState};
 
 use super::{enemy::Enemy, MoveDirection};
 
@@ -19,7 +19,13 @@ impl Plugin for PlayerPlugin {
                     .with_system(lantern_direction)
                     .into(),
             )
-            .add_system(component_status_on_state_change);
+            .add_system(component_status_on_state_change)
+            .add_enter_system(GameState::Loading, |mut commands: Commands| {
+                commands.insert_resource(NextState(PlayerState::Paused));
+            })
+            .add_exit_system(GameState::Loading, |mut commands: Commands| {
+                commands.insert_resource(NextState(PlayerState::Unpaused));
+            });
     }
 }
 

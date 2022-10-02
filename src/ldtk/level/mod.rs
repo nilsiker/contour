@@ -11,7 +11,7 @@ use crate::{pawn::player::Player, state::GameState};
 
 use self::transition::{StartTransition, LevelTransitionPlugin};
 
-use super::{utils::FieldReturner, PhysicsBundle};
+use super::{utils::FieldReturn, PhysicsBundle};
 
 pub struct LevelPlugin;
 impl Plugin for LevelPlugin {

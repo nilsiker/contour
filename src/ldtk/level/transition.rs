@@ -196,7 +196,6 @@ fn end_transition(
 
             if sprite.color.a() == 0.0 {
                 commands.insert_resource(NextState(LevelState::Idle));
-                commands.insert_resource(NextState(GameState::InGame));
             }
         }
     }

@@ -1292,23 +1292,6 @@
 							]
 						},
 						{
-							"__identifier": "Player",
-							"__grid": [4,6],
-							"__pivot": [0.5,0.5],
-							"__tags": [],
-							"__tile": { "tilesetUid": 104, "x": 0, "y": 240, "w": 16, "h": 16 },
-							"__smartColor": "#03CB7C",
-							"iid": "3056cbe0-2a00-11ed-a708-83a456bc3a90",
-							"width": 16,
-							"height": 16,
-							"defUid": 59,
-							"px": [72,104],
-							"fieldInstances": [
-								{ "__identifier": "life", "__value": 100, "__type": "Int", "__tile": null, "defUid": 61, "realEditorValues": [] },
-								{ "__identifier": "ammo", "__value": 10, "__type": "Int", "__tile": null, "defUid": 60, "realEditorValues": [] }
-							]
-						},
-						{
 							"__identifier": "Container",
 							"__grid": [5,4],
 							"__pivot": [0,0],
@@ -1332,6 +1315,23 @@
 								{ "__identifier": "sprite_offset", "__value": "(0.0,-0.2)", "__type": "String", "__tile": null, "defUid": 124, "realEditorValues": [] },
 								{ "__identifier": "rigidbody", "__value": "Dynamic", "__type": "String", "__tile": null, "defUid": 125, "realEditorValues": [] },
 								{ "__identifier": "collider_size", "__value": "(6.0,4.0)", "__type": "String", "__tile": null, "defUid": 129, "realEditorValues": [] }
+							]
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [4,6],
+							"__pivot": [0.5,0.5],
+							"__tags": [],
+							"__tile": { "tilesetUid": 104, "x": 0, "y": 240, "w": 16, "h": 16 },
+							"__smartColor": "#03CB7C",
+							"iid": "a302e970-2a00-11ed-a334-fd06ef9e3c53",
+							"width": 16,
+							"height": 16,
+							"defUid": 59,
+							"px": [72,104],
+							"fieldInstances": [
+								{ "__identifier": "life", "__value": 100, "__type": "Int", "__tile": null, "defUid": 61, "realEditorValues": [] },
+								{ "__identifier": "ammo", "__value": 10, "__type": "Int", "__tile": null, "defUid": 60, "realEditorValues": [] }
 							]
 						}
 					]

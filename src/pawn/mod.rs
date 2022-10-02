@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::{prelude::FieldValue, EntityInstance};
 use iyes_loopless::prelude::IntoConditionalSystem;
 
-use crate::{ldtk::utils::FieldReturner, state::GameState};
+use crate::{ldtk::utils::FieldReturn, state::GameState};
 
 use self::{enemy::EnemyPlugin, player::PlayerPlugin};
 

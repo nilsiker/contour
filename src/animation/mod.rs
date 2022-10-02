@@ -28,7 +28,6 @@ impl Animations {
         let clips: HashMap<String, Clip> =
             ron::de::from_bytes(&file[..]).expect("deserialization of anim ron file");
 
-
         Animations { active, clips }
     }
 }
@@ -92,23 +91,25 @@ fn sprite_animation(
     )>,
 ) {
     for (mut animations, mut sprite, direction, flashlight) in &mut query {
-        let clips = &mut animations.clips;
-        if direction.0.length_squared() > 0. {
-            if flashlight.0 {
+        if animations.active {
+            let clips = &mut animations.clips;
+            if direction.0.length_squared() > 0. {
+                if flashlight.0 {
+                    sprite.index = clips
+                        .get_mut("walk_light")
+                        .expect("existing walk_light anim")
+                        .step();
+                } else {
+                    sprite.index = clips.get_mut("walk").expect("existing walk anim").step();
+                }
+            } else if flashlight.0 {
                 sprite.index = clips
-                    .get_mut("walk_light")
-                    .expect("existing walk_light anim")
+                    .get_mut("idle_light")
+                    .expect("existing idle_light anim")
                     .step();
             } else {
-                sprite.index = clips.get_mut("walk").expect("existing walk anim").step();
+                sprite.index = clips.get_mut("idle").expect("existing idle anim").step();
             }
-        } else if flashlight.0 {
-            sprite.index = clips
-                .get_mut("idle_light")
-                .expect("existing idle_light anim")
-                .step();
-        } else {
-            sprite.index = clips.get_mut("idle").expect("existing idle anim").step();
         }
     }
 }
