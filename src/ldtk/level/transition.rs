@@ -152,26 +152,19 @@ fn teleport_player_on_level_change(
 ) {
     if let TeleportState::Pending(gate_index) = teleport_state.0 {
         if let Ok(mut player) = players.get_single_mut() {
-            if let Some((transform, gate)) = gates
-                .iter()
-                .filter(|(_, gate)| match gate {
-                    Gate::Entry(from) => *from == gate_index,
-                    Gate::Exit(_) => false,
-                })
-                .next()
-            {
+            if let Some((transform, gate)) = gates.iter().find(|(_, gate)| match gate {
+                Gate::Entry(from) => *from == gate_index,
+                Gate::Exit(_) => false,
+            }) {
                 bevy::log::info!(
                     "found a gate entrance from {} with translation {:?}",
                     gate_index,
                     transform.translation
                 );
-                match *gate {
-                    Gate::Entry(_) => {
-                        player.translation = transform.translation;
-                        commands.insert_resource(NextState(TeleportState::Idle));
-                        commands.insert_resource(NextState(GameState::InGame));
-                    }
-                    _ => (),
+                if let Gate::Entry(_) = *gate {
+                    player.translation = transform.translation;
+                    commands.insert_resource(NextState(TeleportState::Idle));
+                    commands.insert_resource(NextState(GameState::InGame));
                 }
             }
         }

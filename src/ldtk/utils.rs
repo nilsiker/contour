@@ -25,7 +25,7 @@ impl FieldReturn for EntityInstance {
     fn get_string_value(&self, field_name: &str) -> Option<String> {
         match self.get_field_value(field_name) {
             Some(field_value) => match &field_value {
-                FieldValue::String(value) => value.clone(),
+                FieldValue::String(value) | FieldValue::Enum(value) => value.clone(),
                 _ => {
                     bevy::log::warn!(
                         "Field {field_name} on {} is not of type String.",

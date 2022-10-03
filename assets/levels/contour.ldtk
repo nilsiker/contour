@@ -552,7 +552,7 @@
 					"tilesetUid": null
 				},
 				{
-					"identifier": "rigidbody",
+					"identifier": "static",
 					"__type": "String",
 					"uid": 125,
 					"type": "F_String",
@@ -571,10 +571,7 @@
 					"max": null,
 					"regex": null,
 					"acceptFileTypes": null,
-					"defaultOverride": {
-						"id": "V_String",
-						"params": ["Dynamic"]
-					},
+					"defaultOverride": null,
 					"textLanguageMode": null,
 					"symmetricalRef": false,
 					"autoChainRef": true,
@@ -1287,7 +1284,7 @@
 								{ "__identifier": "loot", "__value": [], "__type": "Array<LocalEnum.Item>", "__tile": null, "defUid": 68, "realEditorValues": [] },
 								{ "__identifier": "sprite", "__value": "box", "__type": "String", "__tile": null, "defUid": 116, "realEditorValues": [] },
 								{ "__identifier": "sprite_offset", "__value": "(0.0,-0.2)", "__type": "String", "__tile": null, "defUid": 124, "realEditorValues": [] },
-								{ "__identifier": "rigidbody", "__value": "Dynamic", "__type": "String", "__tile": null, "defUid": 125, "realEditorValues": [] },
+								{ "__identifier": "static", "__value": null, "__type": "String", "__tile": null, "defUid": 125, "realEditorValues": [] },
 								{ "__identifier": "collider_size", "__value": "(6.0,4.0)", "__type": "String", "__tile": null, "defUid": 129, "realEditorValues": [] }
 							]
 						},
@@ -1313,7 +1310,7 @@
 								{ "__identifier": "loot", "__value": [], "__type": "Array<LocalEnum.Item>", "__tile": null, "defUid": 68, "realEditorValues": [] },
 								{ "__identifier": "sprite", "__value": "box", "__type": "String", "__tile": null, "defUid": 116, "realEditorValues": [] },
 								{ "__identifier": "sprite_offset", "__value": "(0.0,-0.2)", "__type": "String", "__tile": null, "defUid": 124, "realEditorValues": [] },
-								{ "__identifier": "rigidbody", "__value": "Dynamic", "__type": "String", "__tile": null, "defUid": 125, "realEditorValues": [] },
+								{ "__identifier": "static", "__value": null, "__type": "String", "__tile": null, "defUid": 125, "realEditorValues": [] },
 								{ "__identifier": "collider_size", "__value": "(6.0,4.0)", "__type": "String", "__tile": null, "defUid": 129, "realEditorValues": [] }
 							]
 						},

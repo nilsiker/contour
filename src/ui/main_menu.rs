@@ -3,6 +3,9 @@ use bevy_egui::{
     egui::{epaint::Shadow, style::Margin, Frame, Pos2, Rect, Rounding, Vec2},
     EguiContext,
 };
+use iyes_loopless::state::NextState;
+
+use crate::state::GameState;
 
 use super::{
     options_menu::OptionsUiState,
@@ -19,7 +22,18 @@ impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(MainUiState { show: false })
             .add_system(input_show_menu)
+            .add_system(set_game_state)
             .add_system(update);
+    }
+}
+
+fn set_game_state(mut commands: Commands, menu_state: Res<MainUiState>) {
+    if menu_state.is_changed() {
+        if menu_state.show {
+            commands.insert_resource(NextState(GameState::UI));
+        } else {
+            commands.insert_resource(NextState(GameState::InGame))
+        }
     }
 }
 

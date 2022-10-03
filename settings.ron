@@ -3,5 +3,5 @@
     sfx: 50.0,
     vsync: false,
     fullscreen: false,
-    resolution: (1920.0, 1080.0),
+    resolution: (1280.0, 720.0),
 )

@@ -27,12 +27,8 @@ impl From<EntityInstance> for Speed {
     fn from(entity: EntityInstance) -> Self {
         match entity.get_field_value("speed") {
             Some(speed) => {
-                if let FieldValue::Float(speed) = speed {
-                    if let Some(speed) = speed {
-                        Self(speed)
-                    } else {
-                        Self::default()
-                    }
+                if let FieldValue::Float(Some(speed)) = speed {
+                    Self(speed)
                 } else {
                     Self::default()
                 }

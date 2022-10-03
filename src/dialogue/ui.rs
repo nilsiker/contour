@@ -6,10 +6,14 @@ use bevy_egui::{
     egui::{epaint::Shadow, style::Margin, Color32, Frame, Pos2, Rect, Rounding, Vec2},
     EguiContext,
 };
+use iyes_loopless::state::NextState;
 
-use crate::ui::{styling::MENU_FILL, text::h2};
+use crate::{
+    state::GameState,
+    ui::{styling::MENU_FILL, text::h2},
+};
 
-use super::{DialogueChangeEvent, DialogueNode};
+use super::DialogueNode;
 
 const DIALOGUE_HEIGHT: f32 = 200.0;
 const OUTER_MARGIN_X: f32 = 40.0;
@@ -24,7 +28,9 @@ impl Plugin for DialogueUiPlugin {
             Duration::from_millis(100),
             true,
         )))
+        .insert_resource(DialogueProgress(0))
         .add_system(show_dialogue)
+        .add_system(set_game_state_on_dialogue_change)
         .add_system(set_timer_state_on_dialogue_change)
         .add_system(tick_dialogue_timer)
         .add_system(animate_dialogue_text)
@@ -34,30 +40,47 @@ impl Plugin for DialogueUiPlugin {
 
 struct DialogueTextTimer(Timer);
 
-fn step_through_dialogue(mut dialogue: ResMut<DialogueNode>, input: Res<Input<KeyCode>>) {
-    if let DialogueNode::Line(data) = dialogue.as_mut() {
+#[derive(Clone, Debug)]
+struct DialogueProgress(usize);
+
+fn step_through_dialogue(
+    mut progress: ResMut<DialogueProgress>,
+    mut dialogue: ResMut<DialogueNode>,
+    input: Res<Input<KeyCode>>,
+) {
+    if let DialogueNode::Line(data) = dialogue.as_ref() {
         if input.just_released(KeyCode::Space) {
-            if data.progress < data.text.len() {
-                data.progress = data.text.len();
+            if progress.0 < data.text.len() {
+                progress.0 = data.text.len();
             } else {
                 *dialogue = *data.next.clone();
+                progress.0 = 0;
             }
         }
     }
 }
 
+fn set_game_state_on_dialogue_change(mut commands: Commands, dialogue: Res<DialogueNode>) {
+    if dialogue.is_changed() {
+        commands.insert_resource(NextState(match *dialogue {
+            DialogueNode::None => GameState::InGame,
+            _ => GameState::UI,
+        }));
+    }
+}
+
 fn set_timer_state_on_dialogue_change(
+    dialogue: Res<DialogueNode>,
     mut timer: ResMut<DialogueTextTimer>,
-    mut events: EventReader<DialogueChangeEvent>,
 ) {
-    for event in events.iter() {
-        {
-            match event.0 {
-                DialogueNode::None => timer.0.pause(),
-                _ => {
-                    timer.0.reset();
-                    timer.0.unpause();
-                }
+    if dialogue.is_changed() {
+        bevy::log::info!("{:?}", dialogue);
+
+        match *dialogue {
+            DialogueNode::None => timer.0.pause(),
+            _ => {
+                timer.0.reset();
+                timer.0.unpause();
             }
         }
     }
@@ -71,17 +94,22 @@ fn tick_dialogue_timer(mut timer: ResMut<DialogueTextTimer>, time: Res<Time>) {
     }
 }
 
-fn animate_dialogue_text(mut dialogue: ResMut<DialogueNode>, timer: Res<DialogueTextTimer>) {
-    if let DialogueNode::Line(data) = dialogue.as_mut() {
-        if timer.0.just_finished() && data.progress < data.text.len() {
-            data.progress += 1;
+fn animate_dialogue_text(
+    dialogue: Res<DialogueNode>,
+    mut progress: ResMut<DialogueProgress>,
+    timer: Res<DialogueTextTimer>,
+) {
+    if let DialogueNode::Line(data) = dialogue.clone() {
+        if timer.0.just_finished() && progress.0 < data.text.len() {
+            progress.0 += 1;
         }
     }
 }
 
 fn show_dialogue(
     mut egui: ResMut<EguiContext>,
-    mut dialogue: ResMut<DialogueNode>,
+    dialogue: Res<DialogueNode>,
+    progress: ResMut<DialogueProgress>,
     windows: Res<Windows>,
 ) {
     if let Some(window) = windows.get_primary() {
@@ -91,7 +119,7 @@ fn show_dialogue(
         )
             .into();
         let size: Vec2 = (window.width() - (2.0 * INNER_MARGIN_X), DIALOGUE_HEIGHT).into();
-        match dialogue.as_mut() {
+        match dialogue.clone() {
             DialogueNode::Line(data) => {
                 bevy_egui::egui::Window::new("DialogueWindow")
                     .title_bar(false)
@@ -109,7 +137,7 @@ fn show_dialogue(
                     .show(egui.ctx_mut(), |ui| {
                         ui.horizontal_centered(|ui| {
                             ui.vertical(|ui| {
-                                let sliced_text = &data.text[..data.progress];
+                                let sliced_text = &data.text[..progress.0];
                                 ui.label(h2(sliced_text));
                             });
                         });

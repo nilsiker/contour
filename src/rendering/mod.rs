@@ -52,7 +52,6 @@ fn initiate_window_settings(mut windows: ResMut<Windows>, video: Res<VideoSettin
         .get_primary_mut()
         .expect("primary window not loaded");
 
-    window.set_cursor_icon(CursorIcon::Hand);
     update_window_helper(window, &video);
 }
 

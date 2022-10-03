@@ -7,9 +7,9 @@ use bevy_inspector_egui::Inspectable;
 use heron::CollisionEvent;
 use iyes_loopless::state::NextState;
 
-use crate::{pawn::player::Player, state::GameState};
+use crate::{pawn::player::Player, physics::TupleUtil, state::GameState};
 
-use self::transition::{StartTransition, LevelTransitionPlugin};
+use self::transition::{LevelTransitionPlugin, StartTransition};
 
 use super::{utils::FieldReturn, PhysicsBundle};
 
@@ -17,7 +17,7 @@ pub struct LevelPlugin;
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(LdtkPlugin)
-        .add_plugin(LevelTransitionPlugin)
+            .add_plugin(LevelTransitionPlugin)
             .add_startup_system(setup)
             .insert_resource(LdtkSettings {
                 level_spawn_behavior: LevelSpawnBehavior::UseZeroTranslation,
@@ -59,7 +59,7 @@ fn add_name_on_ldtk_levels(
         let asset = assets.get(handle).unwrap();
         commands
             .entity(entity)
-            .insert(Name::new(format!("{}", asset.level.identifier)));
+            .insert(Name::new(asset.level.identifier.clone()));
     })
 }
 
@@ -104,33 +104,16 @@ impl Default for Gate {
 }
 impl From<EntityInstance> for Gate {
     fn from(entity: EntityInstance) -> Self {
-        let index = match entity.get_field_value("to") {
-            Some(field_value) => {
-                if let FieldValue::Int(option) = field_value {
-                    if let Some(level_index) = option {
-                        level_index as usize
-                    } else {
-                        0
-                    }
-                } else {
-                    0
-                }
-            }
-            None => 0,
+        let index = if let Some(FieldValue::Int(Some(level_index))) = entity.get_field_value("to") {
+            level_index as usize
+        } else {
+            0
         };
 
-        match entity.get_field_value("Gate") {
-            Some(field_value) => {
-                if let FieldValue::Enum(string) = field_value {
-                    if let Some(value) = string {
-                        if value == "Entry" {
-                            Gate::Entry(index)
-                        } else {
-                            Gate::Exit(index)
-                        }
-                    } else {
-                        Gate::Exit(index)
-                    }
+        match entity.get_string_value("Gate") {
+            Some(value) => {
+                if value == "Entry" {
+                    Gate::Entry(index)
                 } else {
                     Gate::Exit(index)
                 }
@@ -159,32 +142,35 @@ struct EntryBundle {
 }
 
 fn register_level_gate_collisions(
-    mut players: Query<Entity, With<Player>>,
+    players: Query<Entity, With<Player>>,
     mut gates: Query<(Entity, &Gate)>,
     level_selection: ResMut<LevelSelection>,
     mut level_transitions: EventWriter<StartTransition>,
 
     mut events: EventReader<CollisionEvent>,
 ) {
-    for event in events.iter() {
-        if let CollisionEvent::Started(data1, data2) = event {
-            if let Ok(_) = players.get_single_mut() {
-                let mut gates = gates.iter_mut().filter(|(g, _)| {
-                    g == &data1.rigid_body_entity() || g == &data2.rigid_body_entity()
-                });
+    let player = match players.get_single() {
+        Ok(player) => player,
+        Err(_) => return,
+    };
 
-                if let Some((_, gate)) = gates.next() {
-                    if let LevelSelection::Index(current_index) = *level_selection {
-                        match gate {
-                            Gate::Exit(next_index) => {
-                                if current_index != *next_index {
-                                    level_transitions.send(StartTransition {
-                                        from: current_index,
-                                        to: *next_index,
-                                    });
-                                }
-                            }
-                            _ => (),
+    for event in events
+        .iter()
+        .filter(|ev| ev.collision_shape_entities().any(player))
+    {
+        if let CollisionEvent::Started(data1, data2) = event {
+            let mut gates = gates.iter_mut().filter(|(g, _)| {
+                g == &data1.rigid_body_entity() || g == &data2.rigid_body_entity()
+            });
+
+            if let Some((_, gate)) = gates.next() {
+                if let LevelSelection::Index(current_index) = *level_selection {
+                    if let Gate::Exit(next_index) = gate {
+                        if current_index != *next_index {
+                            level_transitions.send(StartTransition {
+                                from: current_index,
+                                to: *next_index,
+                            });
                         }
                     }
                 }

@@ -14,12 +14,13 @@ pub mod rendering;
 mod save;
 pub mod state;
 pub mod ui;
+mod interaction;
 
 use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
 use bevy_egui::EguiPlugin;
 use heron::prelude::*;
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "debug")] // Debug plugins
 use {bevy::diagnostic::FrameTimeDiagnosticsPlugin, bevy_inspector_egui::WorldInspectorPlugin};
 
 use game::ContourPlugins;
@@ -31,10 +32,11 @@ fn main() {
         .insert_resource(WindowDescriptor {
             title: "Contour".to_string(),
             present_mode: PresentMode::AutoNoVsync,
-            width: 1920.0,
-            height: 1080.0,
+            width: 1280.0,
+            height: 720.0,
             transparent: true,
-            position: WindowPosition::At(Vec2 { x: 1400.0, y: 0.0 }),
+            decorations: false,
+            position: WindowPosition::At(Vec2 { x: 1720.0, y: 0.0 }),
             resizable: false,
             ..default()
         })
@@ -47,12 +49,12 @@ fn main() {
         .add_plugin(PhysicsPlugin::default())
         .add_plugin(EguiPlugin);
 
-    #[cfg(debug_assertions)] // Debug plugins
-    app.add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(WorldInspectorPlugin::default());
-
     // Contour game plugins
     app.add_plugins(ContourPlugins);
+
+    #[cfg(feature = "debug")] // Debug plugins
+    app.add_plugin(FrameTimeDiagnosticsPlugin)
+        .add_plugin(WorldInspectorPlugin::default());
 
     app.run();
 }

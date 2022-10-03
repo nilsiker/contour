@@ -12,6 +12,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(movement_input)
             .add_loopless_state(PlayerState::Unpaused)
+            .add_system(set_scale)
             .add_system_set(
                 ConditionSet::new()
                     .run_in_state(PlayerState::Unpaused)
@@ -26,6 +27,12 @@ impl Plugin for PlayerPlugin {
             .add_exit_system(GameState::Loading, |mut commands: Commands| {
                 commands.insert_resource(NextState(PlayerState::Unpaused));
             });
+    }
+}
+
+fn set_scale(mut query: Query<&mut Transform, Added<Player>>) {
+    for mut transform in &mut query {
+        transform.scale *= 0.85;
     }
 }
 

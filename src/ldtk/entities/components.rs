@@ -8,18 +8,8 @@ pub struct Info(pub String);
 impl From<EntityInstance> for Info {
     fn from(entity: EntityInstance) -> Self {
         Self(match entity.get_field_value("text") {
-            Some(field_value) => {
-                if let FieldValue::String(option) = field_value {
-                    if let Some(text) = option {
-                        text
-                    } else {
-                        String::new()
-                    }
-                } else {
-                    String::new()
-                }
-            }
-            None => String::new(),
+            Some(FieldValue::String(Some(text))) => text,
+            _ => String::new(),
         })
     }
 }

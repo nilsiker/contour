@@ -8,19 +8,11 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug executable 'contour'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=contour",
-                    "--package=contour",
-                    "--features=debug"
-                ],
-                "filter": {
-                    "name": "contour",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
+            "program": "bacon",
+            "args": [
+                "run",
+                "--features=debug"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {
@@ -41,6 +33,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        },
+        }
     ]
 }

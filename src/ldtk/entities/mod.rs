@@ -1,5 +1,5 @@
 mod bundles;
-mod components;
+pub mod components;
 
 use bevy::{prelude::*, sprite::Anchor};
 use bevy_ecs_ldtk::prelude::*;
