@@ -7,6 +7,7 @@ mod audio;
 mod config;
 mod dialogue;
 mod game;
+mod interaction;
 mod ldtk;
 mod pawn;
 pub mod physics;
@@ -14,9 +15,12 @@ pub mod rendering;
 mod save;
 pub mod state;
 pub mod ui;
-mod interaction;
 
-use bevy::{prelude::*, render::texture::ImageSettings, window::PresentMode};
+use bevy::{
+    prelude::*,
+    render::texture::ImageSettings,
+    window::PresentMode,
+};
 use bevy_egui::EguiPlugin;
 use heron::prelude::*;
 
@@ -46,6 +50,7 @@ fn main() {
             0x1D as f32 / 255.0,
         )))
         .add_plugins(DefaultPlugins)
+
         .add_plugin(PhysicsPlugin::default())
         .add_plugin(EguiPlugin);
 

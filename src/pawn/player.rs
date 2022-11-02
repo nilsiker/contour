@@ -41,7 +41,7 @@ fn component_status_on_state_change(
     state: Res<CurrentState<PlayerState>>,
 ) {
     if state.is_changed() {
-        for mut animation in &mut query {
+        if let Ok(mut animation) = query.get_single_mut() {
             animation.active = match state.0 {
                 PlayerState::Paused => false,
                 PlayerState::Unpaused => true,

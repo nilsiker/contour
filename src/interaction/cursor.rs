@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use heron::{CollisionEvent, CollisionShape, RigidBody};
 use iyes_loopless::{prelude::AppLooplessStateExt, state::CurrentState};
 
-use crate::{ldtk::entities::components::Info, physics::TupleUtil, state::GameState};
+use crate::{physics::TupleUtil, state::GameState};
+
+use super::Interactable;
 
 pub struct CursorPlugin;
 impl Plugin for CursorPlugin {
@@ -21,10 +23,21 @@ impl Plugin for CursorPlugin {
 enum Icon {
     Idle,
     Examine,
-    Grab,
-    Question,
     Talk,
-    Use,
+}
+
+impl From<Interactable> for Icon {
+    fn from(interactable: Interactable) -> Self {
+        match interactable {
+            Interactable::Examine(_) => Icon::Examine,
+            Interactable::Talk(_) => Icon::Talk,
+        }
+    }
+}
+impl Default for Icon {
+    fn default() -> Self {
+        Self::Idle
+    }
 }
 
 #[derive(Component)]
@@ -52,7 +65,7 @@ fn init_cursor_sprite(
             transform,
             ..default()
         })
-        .insert(Cursor(Icon::Examine))
+        .insert(Cursor(Icon::Idle))
         .insert(CollisionShape::Sphere { radius: 0.4 })
         .insert(RigidBody::Sensor);
 }
@@ -118,7 +131,7 @@ fn change_cursor_icon(mut query: Query<(&mut TextureAtlasSprite, &Cursor), Chang
 fn handle_cursor_overlap(
     mut collisions: EventReader<CollisionEvent>,
     cursor_query: Query<Entity, With<Cursor>>,
-    info_query: Query<&Info, Without<Cursor>>,
+    info_query: Query<&Interactable>,
 ) {
     if let Ok(cursor) = cursor_query.get_single() {
         for collision in collisions
@@ -127,8 +140,17 @@ fn handle_cursor_overlap(
         {
             if let CollisionEvent::Started(_, _) = *collision {
                 if let Some(entity) = collision.collision_shape_entities().not(cursor) {
-                    if let Ok(info) = info_query.get(entity) {
-                        bevy::log::info!("{}", info.0)
+                    if let Ok(interactable) = info_query.get(entity) {
+                        match interactable {
+                            Interactable::Examine(text) => {
+                                bevy::log::info!("Examine found!: {text}")
+                            }
+                            Interactable::Talk(node) => match node {
+                                crate::dialogue::DialogueNode::Line(_) => todo!(),
+                                crate::dialogue::DialogueNode::Choice(_) => todo!(),
+                                _ => bevy::log::warn!("Found empty dialogue node."),
+                            },
+                        }
                     }
                 }
             }

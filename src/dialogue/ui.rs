@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_egui::{
     egui::{epaint::Shadow, style::Margin, Color32, Frame, Pos2, Rect, Rounding, Vec2},
     EguiContext,
@@ -46,6 +46,7 @@ struct DialogueProgress(usize);
 fn step_through_dialogue(
     mut progress: ResMut<DialogueProgress>,
     mut dialogue: ResMut<DialogueNode>,
+    dialogues: Res<HashMap<i32, DialogueNode>>,
     input: Res<Input<KeyCode>>,
 ) {
     if let DialogueNode::Line(data) = dialogue.as_ref() {
@@ -53,7 +54,16 @@ fn step_through_dialogue(
             if progress.0 < data.text.len() {
                 progress.0 = data.text.len();
             } else {
-                *dialogue = *data.next.clone();
+                match data.next {
+                    super::NextDialogue::None => *dialogue = DialogueNode::None,
+                    super::NextDialogue::Id(id) => {
+                        *dialogue = match dialogues.get(&id) {
+                            Some(dialogue) => dialogue.clone(),
+                            None => DialogueNode::None,
+                        }
+                    }
+                }
+
                 progress.0 = 0;
             }
         }

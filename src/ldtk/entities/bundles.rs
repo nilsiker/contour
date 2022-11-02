@@ -103,7 +103,7 @@ pub struct InfoBundle {
 }
 
 #[derive(Bundle, LdtkEntity)]
-pub struct WardrobeBundle {
+pub struct NpcBundle {
     #[from_entity_instance]
     sprite_offset: SpriteOffset,
     #[from_entity_instance]

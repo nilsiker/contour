@@ -12,6 +12,7 @@ impl Plugin for EntitiesPlugin {
         app.register_ldtk_entity::<ContainerBundle>("Container")
             .register_ldtk_entity::<PlayerBundle>("Player")
             .register_ldtk_entity::<InfoBundle>("Info")
+            .register_ldtk_entity::<NpcBundle>("NPC")
             .add_system(set_entity_names)
             .add_system(set_sprite_anchor);
 

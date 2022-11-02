@@ -1,6 +1,8 @@
 use bevy_ecs_ldtk::{prelude::FieldValue, EntityInstance};
 use serde::de::DeserializeOwned;
 
+
+
 pub trait FieldReturn {
     fn get_field_value(&self, field_name: &str) -> Option<FieldValue>;
     fn get_string_value(&self, field_name: &str) -> Option<String>;

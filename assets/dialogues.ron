@@ -1,0 +1,17 @@
+{
+    0: Line((
+        text: "This is the start of a dummy dialogue...",
+        event: None,
+        next: Id(1),
+    )),
+    1: Line((
+        text: "... and this is the end!",
+        event: None,
+        next: Id(2),
+    )),
+    2: Line((
+        text: "KOOOONTZ!",
+        event: None,
+        next: None,
+    ))
+}
